@@ -1,0 +1,34 @@
+base_path: /autoget
+port: 8081
+
+prowlarr:
+  api_url: http://localhost:9696
+  api_key: your_prowlarr_api_key
+
+downloaders:
+  - name: qBittorrent
+    seed_dir: /path/to/seed_dir
+
+database:
+  sqlite.path: /path/to/my_database.db
+
+auth:
+  type: google_auth # or none or api_key
+  api_key: your_api_key
+  google_auth:
+    project: your_gcp_project
+    client_id: your_client_id
+    client_secret: your_client_secret
+    allowed_email_addresses:
+      - example.com
+      - yourdomain.com
+
+tmdb:
+  api_key: your_tmdb_api_key
+
+
+complete_dir: /path/to/downloads
+
+library_dirs:
+  Movies: /path/to/movies
+  TVShows: /path/to/tv_shows
