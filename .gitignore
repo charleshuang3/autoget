@@ -1,0 +1,25 @@
+# Ignore SQLite databases
+*.db
+
+# Ignore configuration files with sensitive data
+backend/config.yaml
+
+# Node modules and package locks for the frontend
+web/node_modules/
+web/pnpm-lock.yaml
+
+# Build artifacts
+dist/
+build/
+
+# Logs and temporary files
+*.log
+*.env
+*.tmp
+
+# Ignore editor and system files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
