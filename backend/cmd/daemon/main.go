@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/charleshuang3/autoget/backend/config"
+	"github.com/charleshuang3/autoget/backend/lib/config"
 )
 
 func main() {
