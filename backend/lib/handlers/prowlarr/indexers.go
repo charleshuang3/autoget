@@ -10,7 +10,7 @@ type Indexer struct {
 	Name string `json:"name"`
 }
 
-type Response struct {
+type IndexersHandlerResponse struct {
 	Indexers []Indexer `json:"indexers"`
 }
 
@@ -21,7 +21,7 @@ func (p *Prowlarr) IndexersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := Response{
+	response := IndexersHandlerResponse{
 		Indexers: []Indexer{},
 	}
 

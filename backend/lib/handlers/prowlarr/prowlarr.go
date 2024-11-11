@@ -11,7 +11,7 @@ type Prowlarr struct {
 }
 
 func New(config *config.Config) *Prowlarr {
-	c := starr.New(config.Prowlarr.APIURL, config.Prowlarr.APIKey, 0)
+	c := starr.New(config.Prowlarr.APIKey, config.Prowlarr.APIURL, 0)
 	client := prowlarr_api.New(c)
 	return &Prowlarr{
 		client: client,
