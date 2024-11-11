@@ -29,3 +29,10 @@ Impl the http handler in `backend/lib/handlers/prowlarr/indexers.go`, also add a
 
 add router to `backend/lib/handlres/router.go` use `github.com/go-chi/chi/v5`.
 
+----------------------------
+
+Add helper to start and grateful shutdown of the server in `backend/lib/handlres/router.go`.
+
+----------------------------
+
+in backend/cmd/daemon/main.go, call NewRouter  StartServer and handle signal in main
