@@ -31,7 +31,7 @@ func main() {
 
 	go func() {
 		<-signalChan
-		close(stopChan)
+		stopChan <- struct{}{}
 	}()
 
 	handlers.StartServer(cfg, router, stopChan)
