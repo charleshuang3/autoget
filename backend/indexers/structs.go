@@ -20,6 +20,22 @@ type IIndexer interface {
 	SetRequestTimeout(timeout time.Duration)
 }
 
+type IndexerBasicInfo struct {
+	Name_   string
+	Private bool
+}
+
+func NewIndexerBasicInfo(name string, private bool) *IndexerBasicInfo {
+	return &IndexerBasicInfo{
+		Name_:   name,
+		Private: private,
+	}
+}
+
+func (info *IndexerBasicInfo) Name() string {
+	return info.Name_
+}
+
 type Category struct {
 	ID            string      `json:"id"`
 	Name          string      `json:"name"`

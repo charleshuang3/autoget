@@ -38,6 +38,7 @@ func (c *Config) GetBaseURL() string {
 }
 
 type MTeam struct {
+	indexers.IndexerBasicInfo
 	scraper.Scraper
 
 	config *Config
@@ -52,16 +53,13 @@ func NewMTeam(config *Config) *MTeam {
 		return nil
 	}
 	m := &MTeam{
-		Scraper: *scraper.NewScraper(),
-		config:  config,
+		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(name, true),
+		Scraper:          *scraper.NewScraper(),
+		config:           config,
 	}
 
 	m.Categories()
 	return m
-}
-
-func (m *MTeam) Name() string {
-	return name
 }
 
 type ListCategories struct {
