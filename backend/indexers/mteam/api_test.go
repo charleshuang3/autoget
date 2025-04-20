@@ -29,19 +29,19 @@ func TestToCategories(t *testing.T) {
 	got := categories.toCategories(false)
 	want := []*indexers.Category{
 		{
-			ID:   "indexers/m-team/categories/adult-root",
+			ID:   "adult-root",
 			Name: "adult",
 			SubCategories: []*indexers.Category{
 				{
-					ID:   "indexers/m-team/categories/adult-115",
+					ID:   "adult-115",
 					Name: "AV(有码)",
 					SubCategories: []*indexers.Category{
 						{
-							ID:   "indexers/m-team/categories/adult-410",
+							ID:   "adult-410",
 							Name: "AV(有码)/HD Censored",
 						},
 						{
-							ID:   "indexers/m-team/categories/adult-440",
+							ID:   "adult-440",
 							Name: "AV(Gay)/HD",
 						},
 					},
@@ -49,15 +49,15 @@ func TestToCategories(t *testing.T) {
 			},
 		},
 		{
-			ID:   "indexers/m-team/categories/normal-root",
+			ID:   "normal-root",
 			Name: "normal",
 			SubCategories: []*indexers.Category{
 				{
-					ID:   "indexers/m-team/categories/normal-110",
+					ID:   "normal-110",
 					Name: "Music",
 					SubCategories: []*indexers.Category{
 						{
-							ID:   "indexers/m-team/categories/normal-434",
+							ID:   "normal-434",
 							Name: "Music(无损)",
 						},
 					},

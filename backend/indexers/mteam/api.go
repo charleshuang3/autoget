@@ -2,7 +2,6 @@ package mteam
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -152,7 +151,7 @@ func (l *ListCategories) toCategories(blockGayPorn bool) []*indexers.Category {
 }
 
 func buildIDForSubCategories(c *indexers.Category, prefix string) {
-	c.ID = fmt.Sprintf(indexers.CategoryIdFormat, name, prefix+"-"+c.ID)
+	c.ID = prefix + "-" + c.ID
 	for _, sub := range c.SubCategories {
 		buildIDForSubCategories(sub, prefix)
 	}
