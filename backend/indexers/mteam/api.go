@@ -97,11 +97,11 @@ type ListCategories struct {
 
 func (l *ListCategories) toCategories(blockGayPorn bool) []*indexers.Category {
 	adultRoot := &indexers.Category{
-		ID:   "root",
+		ID:   "root", // Temporary ID before prefixing
 		Name: CategoryAdult,
 	}
 	normalRoot := &indexers.Category{
-		ID:   "root",
+		ID:   "root", // Temporary ID before prefixing
 		Name: CategoryNormal,
 	}
 	res := []*indexers.Category{
