@@ -1,4 +1,4 @@
-package category
+package prefetcheddata
 
 import (
 	"sort"

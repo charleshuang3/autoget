@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/charleshuang3/autoget/backend/indexers/mteam/category"
+	"github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
 )
 
 // This is a tools used to update categories.
@@ -27,7 +27,7 @@ func main() {
 	}
 
 	log.Info().Msg("Fetching categories from M-Team API...")
-	categories, err := category.FetchCategories(apiKey, true)
+	categories, err := prefetcheddata.FetchCategories(apiKey, true)
 	if err != nil {
 		log.Fatal().Msgf("Failed to fetch categories: %v", err)
 	}

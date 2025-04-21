@@ -1,4 +1,4 @@
-package category
+package prefetcheddata
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ var (
 	//go:embed test_res/list_categories.json
 	testToCategoriesInput []byte
 
-	//go:embed categories.json
+	//go:embed data.json
 	currentCategories []byte
 
 	apiKey = os.Getenv("MTEAM_API_KEY")

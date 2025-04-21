@@ -7,7 +7,7 @@ import (
 	_ "embed"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
-	"github.com/charleshuang3/autoget/backend/indexers/mteam/category"
+	category "github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/scraper"
 	"github.com/rs/zerolog/log"
@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	//go:embed category/categories.json
+	//go:embed prefetcheddata/data.json
 	categoriesJSON []byte
 )
 
