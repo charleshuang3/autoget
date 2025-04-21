@@ -76,6 +76,7 @@ type ListResourceItem struct {
 	Title      string    `json:"title"`
 	Title2     string    `json:"title2,omitempty"`
 	Category   string    `json:"category"`
+	Size       uint64    `json:"size"`
 	Resolution string    `json:"resolution,omitempty"`
 	Seeders    uint32    `json:"seeders"`
 	Leechers   uint32    `json:"leechers"`

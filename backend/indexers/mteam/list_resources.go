@@ -217,6 +217,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 
 		seeders, _ := strconv.Atoi(item.Status.Seeders)
 		leechers, _ := strconv.Atoi(item.Status.Leechers)
+		size, _ := strconv.ParseUint(item.Size, 10, 64)
 
 		image := ""
 		if len(item.ImageList) > 0 {
@@ -228,6 +229,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			Title:      item.Name,
 			Title2:     item.SmallDescr,
 			Category:   m.prefetched.Categories.Infos[item.Category].Name,
+			Size:       size,
 			Resolution: m.prefetched.Standards[item.Standard],
 			Seeders:    uint32(seeders),
 			Leechers:   uint32(leechers),
