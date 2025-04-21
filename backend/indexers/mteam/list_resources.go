@@ -234,7 +234,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			image = item.ImageList[0]
 		}
 
-		ListResult.Resources = append(ListResult.Resources, indexers.Resource{
+		ListResult.Resources = append(ListResult.Resources, indexers.ListResourceItem{
 			ID:         item.ID,
 			Title:      item.Name,
 			Title2:     item.SmallDescr,

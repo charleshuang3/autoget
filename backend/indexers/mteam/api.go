@@ -81,6 +81,6 @@ func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return m.categories.Tree, nil
 }
 
-func (m *MTeam) Detail(id string) (indexers.Resource, *errors.HTTPStatusError) {
-	return indexers.Resource{}, nil
+func (m *MTeam) Detail(id string) (indexers.ListResourceItem, *errors.HTTPStatusError) {
+	return indexers.ListResourceItem{}, nil
 }

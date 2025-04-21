@@ -17,7 +17,7 @@ type IIndexer interface {
 	List(category, keyword string, page, pageSize uint32) (*ListResult, *errors.HTTPStatusError)
 
 	// Detail of a resource.
-	Detail(id string) (Resource, *errors.HTTPStatusError)
+	Detail(id string) (ListResourceItem, *errors.HTTPStatusError)
 
 	SetRequestTimeout(timeout time.Duration)
 }
@@ -52,8 +52,8 @@ type Pagination struct {
 }
 
 type ListResult struct {
-	Pagination Pagination `json:"pagination"`
-	Resources  []Resource `json:"resources"`
+	Pagination Pagination         `json:"pagination"`
+	Resources  []ListResourceItem `json:"resources"`
 }
 
 const (
@@ -71,7 +71,7 @@ type VideoDB struct {
 	Rating string `json:"rating,omitempty"`
 }
 
-type Resource struct {
+type ListResourceItem struct {
 	ID         string    `json:"id"`
 	Title      string    `json:"title"`
 	Title2     string    `json:"title2,omitempty"`
