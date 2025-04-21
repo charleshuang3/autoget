@@ -76,8 +76,9 @@ type categoryWithOrder struct {
 }
 
 type categoryFile struct {
-	Categories     []*categoryWithOrder `json:"categories"`
+	CategoryTree   []*categoryWithOrder `json:"category_tree"`
 	CategoryToMode map[string]string    `json:"modes"`
+	Categories     map[string]string    `json:"categories"`
 }
 
 func (l *listCategories) toCategories(excludeGayContent bool) *categoryFile {
@@ -148,9 +149,15 @@ func (l *listCategories) toCategories(excludeGayContent bool) *categoryFile {
 	categoryMode(adultRoot, categoriesToMode, categoryAdult)
 	categoryMode(normalRoot, categoriesToMode, categoryNormal)
 
+	categoryNames := map[string]string{}
+	for id, cat := range categories {
+		categoryNames[id] = cat.Name
+	}
+
 	return &categoryFile{
-		Categories:     roots,
+		CategoryTree:   roots,
 		CategoryToMode: categoriesToMode,
+		Categories:     categoryNames,
 	}
 }
 

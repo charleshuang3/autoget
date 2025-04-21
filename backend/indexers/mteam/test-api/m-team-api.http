@@ -18,6 +18,7 @@ x-api-key: {{$dotenv apiKey}}
 ### Search by keyword
 POST https://api.m-team.io/api/torrent/search
 x-api-key: {{$dotenv apiKey}}
+Content-Type: application/json
 
 {
     "mode":"normal",

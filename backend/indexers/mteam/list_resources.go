@@ -95,25 +95,6 @@ type searchResponseItem struct {
 	ResetBox   string      `json:"resetBox"`
 }
 
-func (it *searchResponseItem) resolution() string {
-	switch it.Standard {
-	case "1":
-		return indexers.Resolution1080p
-	case "2":
-		return indexers.Resolution1080i
-	case "3":
-		return indexers.Resolution720p
-	case "5":
-		return indexers.ResolutionSD
-	case "6":
-		return indexers.Resolution4K
-	case "7":
-		return indexers.Resolution8K
-	default:
-		return ""
-	}
-}
-
 func (it *searchResponseItem) extractDBInfo() []indexers.VideoDB {
 	var res []indexers.VideoDB
 
@@ -144,8 +125,8 @@ func (it *searchResponseItem) extractDBInfo() []indexers.VideoDB {
 }
 
 type searchResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    interface{} `json:"code"` // maybe string or int
+	Message string      `json:"message"`
 	Data    struct {
 		PageNumber string               `json:"pageNumber"`
 		PageSize   string               `json:"pageSize"`
@@ -154,6 +135,17 @@ type searchResponse struct {
 		Data       []searchResponseItem `json:"data"`
 	} `json:"data"`
 }
+
+var (
+	resolutions = map[string]string{
+		"1": indexers.Resolution1080p,
+		"2": indexers.Resolution1080i,
+		"3": indexers.Resolution720p,
+		"5": indexers.ResolutionSD,
+		"6": indexers.Resolution4K,
+		"7": indexers.Resolution8K,
+	}
+)
 
 func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*indexers.ListResult, *errors.HTTPStatusError) {
 	// check category is known.
@@ -193,7 +185,10 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 		respData = r.Body
 	})
 
-	reqErr := c.Request(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData), nil, m.authHeader())
+	h := m.authHeader()
+	h.Set("Content-Type", "application/json")
+
+	reqErr := c.Request(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData), nil, h)
 	if reqErr != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to send request")
 	}
@@ -208,7 +203,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 	}
 
 	if resp.Code != "0" {
-		log.Error().Str("code", resp.Code).Str("message", resp.Message).Msg("API error")
+		log.Error().Any("code", resp.Code).Str("message", resp.Message).Msg("API error")
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 
@@ -243,8 +238,8 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			ID:         item.ID,
 			Title:      item.Name,
 			Title2:     item.SmallDescr,
-			Category:   item.Category,
-			Resolution: item.resolution(),
+			Category:   m.categories.Categories[item.Category],
+			Resolution: resolutions[item.Standard],
 			Seeders:    uint32(seeders),
 			Leechers:   uint32(leechers),
 			DBs:        item.extractDBInfo(),

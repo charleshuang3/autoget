@@ -40,8 +40,9 @@ func (c *Config) GetBaseURL() string {
 }
 
 type Categories struct {
-	Categories     []indexers.Category `json:"categories"`
+	CategoryTree   []indexers.Category `json:"category_tree"`
 	CategoryToMode map[string]string   `json:"modes"`
+	Categories     map[string]string   `json:"categories"`
 }
 
 type MTeam struct {
@@ -77,7 +78,7 @@ func (m *MTeam) authHeader() http.Header {
 }
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
-	return m.categories.Categories, nil
+	return m.categories.CategoryTree, nil
 }
 
 func (m *MTeam) Detail(id string) (indexers.Resource, *errors.HTTPStatusError) {

@@ -30,7 +30,7 @@ func TestToCategories(t *testing.T) {
 
 	got := categories.toCategories(false)
 	want := &categoryFile{
-		Categories: []*categoryWithOrder{
+		CategoryTree: []*categoryWithOrder{
 			{
 				ID:   "adult",
 				Name: "adult",
@@ -84,6 +84,15 @@ func TestToCategories(t *testing.T) {
 			"410":    "adult",
 			"434":    "normal",
 			"440":    "adult",
+			"adult":  "adult",
+			"normal": "normal",
+		},
+		Categories: map[string]string{
+			"110":    "Music",
+			"115":    "AV(有码)",
+			"410":    "AV(有码)/HD Censored",
+			"434":    "Music(无损)",
+			"440":    "AV(Gay)/HD",
 			"adult":  "adult",
 			"normal": "normal",
 		},
