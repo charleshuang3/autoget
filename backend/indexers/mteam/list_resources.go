@@ -136,20 +136,9 @@ type searchResponse struct {
 	} `json:"data"`
 }
 
-var (
-	resolutions = map[string]string{
-		"1": indexers.Resolution1080p,
-		"2": indexers.Resolution1080i,
-		"3": indexers.Resolution720p,
-		"5": indexers.ResolutionSD,
-		"6": indexers.Resolution4K,
-		"7": indexers.Resolution8K,
-	}
-)
-
 func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*indexers.ListResult, *errors.HTTPStatusError) {
 	// check category is known.
-	cat, ok := m.categories.Infos[category]
+	cat, ok := m.prefetched.Categories.Infos[category]
 	if !ok {
 		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid category")
 	}
@@ -238,8 +227,8 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			ID:         item.ID,
 			Title:      item.Name,
 			Title2:     item.SmallDescr,
-			Category:   m.categories.Infos[item.Category].Name,
-			Resolution: resolutions[item.Standard],
+			Category:   m.prefetched.Categories.Infos[item.Category].Name,
+			Resolution: m.prefetched.Standards[item.Standard],
 			Seeders:    uint32(seeders),
 			Leechers:   uint32(leechers),
 			DBs:        item.extractDBInfo(),

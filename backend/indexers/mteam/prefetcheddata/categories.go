@@ -4,10 +4,6 @@ import (
 	"sort"
 	"strconv"
 
-	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -81,12 +77,12 @@ type CategoryInfo struct {
 	Categories []string `json:"categories"` // You can not search resources on "115" but need to includes all sub.
 }
 
-type categoryFile struct {
-	CategoryTree  []*categoryWithOrder     `json:"category_tree"`
-	CategoryInfos map[string]*CategoryInfo `json:"categories"`
+type categoryJSON struct {
+	CategoryTree  []*categoryWithOrder     `json:"tree"`
+	CategoryInfos map[string]*CategoryInfo `json:"flat"`
 }
 
-func (l *listCategories) toCategoryFile(excludeGayContent bool) *categoryFile {
+func (l *listCategories) toCategoryJSON(excludeGayContent bool) *categoryJSON {
 	adultRoot := &categoryWithOrder{
 		ID:   categoryAdult,
 		Name: categoryAdult,
@@ -154,7 +150,7 @@ func (l *listCategories) toCategoryFile(excludeGayContent bool) *categoryFile {
 	categoryInfo(adultRoot, categoryInfos, categoryAdult)
 	categoryInfo(normalRoot, categoryInfos, categoryNormal)
 
-	return &categoryFile{
+	return &categoryJSON{
 		CategoryTree:  roots,
 		CategoryInfos: categoryInfos,
 	}
@@ -195,29 +191,11 @@ func categoryInfo(categories *categoryWithOrder, m map[string]*CategoryInfo, mod
 	}
 }
 
-func FetchCategories(apiKey string, excludeGayContent bool) (*categoryFile, error) {
-	client := http.DefaultClient
-	req, err := http.NewRequest(http.MethodPost, baseURL+"/api/torrent/categoryList", nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+func fetchCategories(apiKey string, excludeGayContent bool) (*categoryJSON, error) {
+	categories := &listCategories{}
+	if err := fetchMTeamAPI(baseURL+"/api/torrent/categoryList", apiKey, categories); err != nil {
+		return nil, err
 	}
 
-	req.Header.Set("x-api-key", apiKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	var categories listCategories
-	if err := json.NewDecoder(resp.Body).Decode(&categories); err != nil {
-		return nil, fmt.Errorf("failed to decode response body: %w, body: %s", err, resp.Body)
-	}
-
-	return categories.toCategoryFile(excludeGayContent), nil
+	return categories.toCategoryJSON(excludeGayContent), nil
 }

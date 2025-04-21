@@ -1,13 +1,12 @@
 package mteam
 
 import (
-	"encoding/json"
 	"net/http"
 
 	_ "embed"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
-	category "github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
+	"github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/scraper"
 	"github.com/rs/zerolog/log"
@@ -40,18 +39,13 @@ func (c *Config) GetBaseURL() string {
 	return c.BaseURL
 }
 
-type Categories struct {
-	Tree  []indexers.Category              `json:"category_tree"`
-	Infos map[string]category.CategoryInfo `json:"categories"`
-}
-
 type MTeam struct {
 	indexers.IndexerBasicInfo
 	scraper.Scraper
 
 	config *Config
 
-	categories Categories
+	prefetched *prefetcheddata.Data
 }
 
 func NewMTeam(config *Config) *MTeam {
@@ -64,8 +58,10 @@ func NewMTeam(config *Config) *MTeam {
 		config:           config,
 	}
 
-	if err := json.Unmarshal(categoriesJSON, &m.categories); err != nil {
-		log.Fatal().Err(err).Msgf("Failed to unmarshal categories: %v", err)
+	var err error
+	m.prefetched, err = prefetcheddata.Read()
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to read prefetched data: %v", err)
 	}
 
 	return m
@@ -78,7 +74,7 @@ func (m *MTeam) authHeader() http.Header {
 }
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
-	return m.categories.Tree, nil
+	return m.prefetched.Categories.Tree, nil
 }
 
 func (m *MTeam) Detail(id string) (indexers.ListResourceItem, *errors.HTTPStatusError) {

@@ -7,8 +7,6 @@ import (
 
 	_ "embed"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,19 +15,16 @@ var (
 	//go:embed test_res/list_categories.json
 	testToCategoriesInput []byte
 
-	//go:embed data.json
-	currentCategories []byte
-
 	apiKey = os.Getenv("MTEAM_API_KEY")
 )
 
-func TestToCategoryFile(t *testing.T) {
+func TestToCategoryJSON(t *testing.T) {
 	categories := &listCategories{}
 	err := json.Unmarshal(testToCategoriesInput, categories)
 	require.NoError(t, err)
 
-	got := categories.toCategoryFile(false)
-	want := &categoryFile{
+	got := categories.toCategoryJSON(false)
+	want := &categoryJSON{
 		CategoryTree: []*categoryWithOrder{
 			{
 				ID:   "adult",
@@ -89,22 +84,4 @@ func TestToCategoryFile(t *testing.T) {
 		},
 	}
 	assert.Equal(t, want, got)
-}
-
-// If this test failed, that means we need to re-run update_categories.
-func TestFetchCategoriesCheckIfUpdated(t *testing.T) {
-	if apiKey == "" {
-		t.Skip("MTEAM_API_KEY not set")
-	}
-
-	want := &categoryFile{}
-	err := json.Unmarshal(currentCategories, want)
-	require.NoError(t, err)
-
-	got, err := FetchCategories(apiKey, true)
-	require.NoError(t, err)
-
-	if d := cmp.Diff(want, got, cmpopts.IgnoreFields(categoryWithOrder{}, "Order", "NumericID")); d != "" {
-		t.Errorf("FetchCategories() mismatch (-want +got):\n%s", d)
-	}
 }
