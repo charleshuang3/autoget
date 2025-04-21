@@ -23,12 +23,12 @@ var (
 	apiKey = os.Getenv("MTEAM_API_KEY")
 )
 
-func TestToCategories(t *testing.T) {
+func TestToCategoryFile(t *testing.T) {
 	categories := &listCategories{}
 	err := json.Unmarshal(testToCategoriesInput, categories)
 	require.NoError(t, err)
 
-	got := categories.toCategories(false)
+	got := categories.toCategoryFile(false)
 	want := &categoryFile{
 		CategoryTree: []*categoryWithOrder{
 			{
@@ -78,23 +78,14 @@ func TestToCategories(t *testing.T) {
 				},
 			},
 		},
-		CategoryToMode: map[string]string{
-			"110":    "normal",
-			"115":    "adult",
-			"410":    "adult",
-			"434":    "normal",
-			"440":    "adult",
-			"adult":  "adult",
-			"normal": "normal",
-		},
-		Categories: map[string]string{
-			"110":    "Music",
-			"115":    "AV(有码)",
-			"410":    "AV(有码)/HD Censored",
-			"434":    "Music(无损)",
-			"440":    "AV(Gay)/HD",
-			"adult":  "adult",
-			"normal": "normal",
+		CategoryInfos: map[string]*CategoryInfo{
+			"110":    {"Music", "normal", []string{"434"}},
+			"115":    {"AV(有码)", "adult", []string{"410", "440"}},
+			"410":    {"AV(有码)/HD Censored", "adult", []string{"410"}},
+			"434":    {"Music(无损)", "normal", []string{"434"}},
+			"440":    {"AV(Gay)/HD", "adult", []string{"440"}},
+			"adult":  {"adult", "adult", []string{}},
+			"normal": {"normal", "normal", []string{}},
 		},
 	}
 	assert.Equal(t, want, got)

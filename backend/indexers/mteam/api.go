@@ -7,6 +7,7 @@ import (
 	_ "embed"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/indexers/mteam/category"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/scraper"
 	"github.com/rs/zerolog/log"
@@ -40,9 +41,8 @@ func (c *Config) GetBaseURL() string {
 }
 
 type Categories struct {
-	CategoryTree   []indexers.Category `json:"category_tree"`
-	CategoryToMode map[string]string   `json:"modes"`
-	Categories     map[string]string   `json:"categories"`
+	Tree  []indexers.Category              `json:"category_tree"`
+	Infos map[string]category.CategoryInfo `json:"categories"`
 }
 
 type MTeam struct {
@@ -78,7 +78,7 @@ func (m *MTeam) authHeader() http.Header {
 }
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
-	return m.categories.CategoryTree, nil
+	return m.categories.Tree, nil
 }
 
 func (m *MTeam) Detail(id string) (indexers.Resource, *errors.HTTPStatusError) {

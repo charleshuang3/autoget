@@ -76,6 +76,13 @@ func TestList(t *testing.T) {
 			pageSize: 2,
 		},
 		{
+			name:     "adult mid level",
+			category: "115",
+			keyword:  "",
+			page:     1,
+			pageSize: 2,
+		},
+		{
 			name:     "normal with keyword",
 			category: "normal",
 			keyword:  "地狱",

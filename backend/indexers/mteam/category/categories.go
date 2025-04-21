@@ -75,13 +75,18 @@ type categoryWithOrder struct {
 	NumericID     int
 }
 
-type categoryFile struct {
-	CategoryTree   []*categoryWithOrder `json:"category_tree"`
-	CategoryToMode map[string]string    `json:"modes"`
-	Categories     map[string]string    `json:"categories"`
+type CategoryInfo struct {
+	Name       string   `json:"name"`
+	Mode       string   `json:"mode"`
+	Categories []string `json:"categories"` // You can not search resources on "115" but need to includes all sub.
 }
 
-func (l *listCategories) toCategories(excludeGayContent bool) *categoryFile {
+type categoryFile struct {
+	CategoryTree  []*categoryWithOrder     `json:"category_tree"`
+	CategoryInfos map[string]*CategoryInfo `json:"categories"`
+}
+
+func (l *listCategories) toCategoryFile(excludeGayContent bool) *categoryFile {
 	adultRoot := &categoryWithOrder{
 		ID:   categoryAdult,
 		Name: categoryAdult,
@@ -145,19 +150,13 @@ func (l *listCategories) toCategories(excludeGayContent bool) *categoryFile {
 	sortSubCategories(adultRoot)
 	sortSubCategories(normalRoot)
 
-	categoriesToMode := map[string]string{}
-	categoryMode(adultRoot, categoriesToMode, categoryAdult)
-	categoryMode(normalRoot, categoriesToMode, categoryNormal)
-
-	categoryNames := map[string]string{}
-	for id, cat := range categories {
-		categoryNames[id] = cat.Name
-	}
+	categoryInfos := map[string]*CategoryInfo{}
+	categoryInfo(adultRoot, categoryInfos, categoryAdult)
+	categoryInfo(normalRoot, categoryInfos, categoryNormal)
 
 	return &categoryFile{
-		CategoryTree:   roots,
-		CategoryToMode: categoriesToMode,
-		Categories:     categoryNames,
+		CategoryTree:  roots,
+		CategoryInfos: categoryInfos,
 	}
 }
 
@@ -174,10 +173,25 @@ func sortSubCategories(category *categoryWithOrder) {
 	}
 }
 
-func categoryMode(categories *categoryWithOrder, m map[string]string, mode string) {
-	m[categories.ID] = mode
+func categoryInfo(categories *categoryWithOrder, m map[string]*CategoryInfo, mode string) {
+	subs := []string{}
+	if categories.Name != categoryAdult && categories.Name != categoryNormal {
+		for _, sub := range categories.SubCategories {
+			subs = append(subs, sub.ID)
+		}
+		if len(subs) == 0 {
+			subs = append(subs, categories.ID)
+		}
+	}
+
+	m[categories.ID] = &CategoryInfo{
+		Name:       categories.Name,
+		Mode:       mode,
+		Categories: subs,
+	}
+
 	for _, sub := range categories.SubCategories {
-		categoryMode(sub, m, mode)
+		categoryInfo(sub, m, mode)
 	}
 }
 
@@ -205,5 +219,5 @@ func FetchCategories(apiKey string, excludeGayContent bool) (*categoryFile, erro
 		return nil, fmt.Errorf("failed to decode response body: %w, body: %s", err, resp.Body)
 	}
 
-	return categories.toCategories(excludeGayContent), nil
+	return categories.toCategoryFile(excludeGayContent), nil
 }

@@ -149,14 +149,14 @@ var (
 
 func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*indexers.ListResult, *errors.HTTPStatusError) {
 	// check category is known.
-	mode, ok := m.categories.CategoryToMode[category]
+	cat, ok := m.categories.Infos[category]
 	if !ok {
 		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid category")
 	}
 
 	req := &searchRequest{
-		Mode:       mode,
-		Categories: []string{category},
+		Mode:       cat.Mode,
+		Categories: cat.Categories,
 		Visible:    1,
 		PageNumber: page,
 		PageSize:   pageSize,
@@ -238,7 +238,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			ID:         item.ID,
 			Title:      item.Name,
 			Title2:     item.SmallDescr,
-			Category:   m.categories.Categories[item.Category],
+			Category:   m.categories.Infos[item.Category].Name,
 			Resolution: resolutions[item.Standard],
 			Seeders:    uint32(seeders),
 			Leechers:   uint32(leechers),
