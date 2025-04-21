@@ -9,7 +9,7 @@ type IIndexer interface {
 	Name() string
 
 	// Categories returns indexer's resource categories.
-	Categories() ([]*Category, error)
+	Categories() ([]Category, error)
 
 	// List resources in given categories and keyword.
 	List(categories []string, keyword string, page, pageSize uint32) ([]Resource, error)
@@ -37,9 +37,9 @@ func (info *IndexerBasicInfo) Name() string {
 }
 
 type Category struct {
-	ID            string      `json:"id"`
-	Name          string      `json:"name"`
-	SubCategories []*Category `json:"subCategories,omitempty"`
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	SubCategories []Category `json:"subCategories,omitempty"`
 }
 
 type Resource struct {

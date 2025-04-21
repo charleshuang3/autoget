@@ -9,7 +9,7 @@ x-api-key: {{$dotenv apiKey}}
 
 {
     "mode":"normal",
-    "categories":[434],
+    "categories":["434"],
     "visible":1,
     "pageNumber":1,
     "pageSize":200

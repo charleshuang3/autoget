@@ -1,0 +1,377 @@
+{
+  "categories": [
+    {
+      "id": "adult",
+      "name": "adult",
+      "subCategories": [
+        {
+          "id": "115",
+          "name": "AV(有码)",
+          "subCategories": [
+            {
+              "id": "410",
+              "name": "AV(有码)/HD Censored",
+              "Order": 31,
+              "NumericID": 410
+            },
+            {
+              "id": "424",
+              "name": "AV(有码)/SD Censored",
+              "Order": 33,
+              "NumericID": 424
+            },
+            {
+              "id": "437",
+              "name": "AV(有码)/DVDiSo Censored",
+              "Order": 36,
+              "NumericID": 437
+            },
+            {
+              "id": "431",
+              "name": "AV(有码)/Blu-Ray Censored",
+              "Order": 37,
+              "NumericID": 431
+            }
+          ],
+          "Order": 20,
+          "NumericID": 115
+        },
+        {
+          "id": "120",
+          "name": "AV(无码)",
+          "subCategories": [
+            {
+              "id": "429",
+              "name": "AV(无码)/HD Uncensored",
+              "Order": 32,
+              "NumericID": 429
+            },
+            {
+              "id": "430",
+              "name": "AV(无码)/SD Uncensored",
+              "Order": 34,
+              "NumericID": 430
+            },
+            {
+              "id": "426",
+              "name": "AV(无码)/DVDiSo Uncensored",
+              "Order": 35,
+              "NumericID": 426
+            },
+            {
+              "id": "432",
+              "name": "AV(无码)/Blu-Ray Uncensored",
+              "Order": 38,
+              "NumericID": 432
+            },
+            {
+              "id": "436",
+              "name": "AV(网站)/0Day",
+              "Order": 39,
+              "NumericID": 436
+            }
+          ],
+          "Order": 21,
+          "NumericID": 120
+        },
+        {
+          "id": "445",
+          "name": "IV",
+          "subCategories": [
+            {
+              "id": "425",
+              "name": "IV(写真影集)",
+              "Order": 40,
+              "NumericID": 425
+            },
+            {
+              "id": "433",
+              "name": "IV(写真图集)",
+              "Order": 41,
+              "NumericID": 433
+            }
+          ],
+          "Order": 22,
+          "NumericID": 445
+        },
+        {
+          "id": "446",
+          "name": "H-ACG",
+          "subCategories": [
+            {
+              "id": "411",
+              "name": "H-游戏",
+              "Order": 51,
+              "NumericID": 411
+            },
+            {
+              "id": "412",
+              "name": "H-动漫",
+              "Order": 52,
+              "NumericID": 412
+            },
+            {
+              "id": "413",
+              "name": "H-漫画",
+              "Order": 53,
+              "NumericID": 413
+            }
+          ],
+          "Order": 23,
+          "NumericID": 446
+        }
+      ],
+      "Order": 0,
+      "NumericID": 0
+    },
+    {
+      "id": "normal",
+      "name": "normal",
+      "subCategories": [
+        {
+          "id": "100",
+          "name": "电影",
+          "subCategories": [
+            {
+              "id": "401",
+              "name": "电影/SD",
+              "Order": 1,
+              "NumericID": 401
+            },
+            {
+              "id": "419",
+              "name": "电影/HD",
+              "Order": 2,
+              "NumericID": 419
+            },
+            {
+              "id": "420",
+              "name": "电影/DVDiSo",
+              "Order": 3,
+              "NumericID": 420
+            },
+            {
+              "id": "421",
+              "name": "电影/Blu-Ray",
+              "Order": 4,
+              "NumericID": 421
+            },
+            {
+              "id": "439",
+              "name": "电影/Remux",
+              "Order": 5,
+              "NumericID": 439
+            }
+          ],
+          "Order": 1,
+          "NumericID": 100
+        },
+        {
+          "id": "105",
+          "name": "影剧/综艺",
+          "subCategories": [
+            {
+              "id": "403",
+              "name": "影剧/综艺/SD",
+              "Order": 1,
+              "NumericID": 403
+            },
+            {
+              "id": "402",
+              "name": "影剧/综艺/HD",
+              "Order": 2,
+              "NumericID": 402
+            },
+            {
+              "id": "438",
+              "name": "影剧/综艺/BD",
+              "Order": 3,
+              "NumericID": 438
+            },
+            {
+              "id": "435",
+              "name": "影剧/综艺/DVDiSo",
+              "Order": 4,
+              "NumericID": 435
+            }
+          ],
+          "Order": 2,
+          "NumericID": 105
+        },
+        {
+          "id": "444",
+          "name": "紀錄",
+          "subCategories": [
+            {
+              "id": "404",
+              "name": "纪录",
+              "Order": 1,
+              "NumericID": 404
+            }
+          ],
+          "Order": 3,
+          "NumericID": 444
+        },
+        {
+          "id": "110",
+          "name": "Music",
+          "subCategories": [
+            {
+              "id": "434",
+              "name": "Music(无损)",
+              "Order": 1,
+              "NumericID": 434
+            },
+            {
+              "id": "406",
+              "name": "演唱",
+              "Order": 3,
+              "NumericID": 406
+            }
+          ],
+          "Order": 4,
+          "NumericID": 110
+        },
+        {
+          "id": "443",
+          "name": "教育",
+          "subCategories": [
+            {
+              "id": "427",
+              "name": "教育書面",
+              "Order": 1,
+              "NumericID": 427
+            },
+            {
+              "id": "441",
+              "name": "教育(影片)",
+              "Order": 2,
+              "NumericID": 441
+            }
+          ],
+          "Order": 5,
+          "NumericID": 443
+        },
+        {
+          "id": "447",
+          "name": "遊戲",
+          "subCategories": [
+            {
+              "id": "423",
+              "name": "PC游戏",
+              "Order": 1,
+              "NumericID": 423
+            },
+            {
+              "id": "448",
+              "name": "TV遊戲",
+              "Order": 2,
+              "NumericID": 448
+            }
+          ],
+          "Order": 6,
+          "NumericID": 447
+        },
+        {
+          "id": "449",
+          "name": "動漫",
+          "subCategories": [
+            {
+              "id": "405",
+              "name": "动画",
+              "Order": 1,
+              "NumericID": 405
+            }
+          ],
+          "Order": 7,
+          "NumericID": 449
+        },
+        {
+          "id": "450",
+          "name": "其他",
+          "subCategories": [
+            {
+              "id": "407",
+              "name": "运动",
+              "Order": 1,
+              "NumericID": 407
+            },
+            {
+              "id": "422",
+              "name": "软件",
+              "Order": 2,
+              "NumericID": 422
+            },
+            {
+              "id": "442",
+              "name": "有聲書",
+              "Order": 3,
+              "NumericID": 442
+            },
+            {
+              "id": "409",
+              "name": "Misc(其他)",
+              "Order": 4,
+              "NumericID": 409
+            }
+          ],
+          "Order": 8,
+          "NumericID": 450
+        }
+      ],
+      "Order": 0,
+      "NumericID": 0
+    }
+  ],
+  "modes": {
+    "100": "normal",
+    "105": "normal",
+    "110": "normal",
+    "115": "adult",
+    "120": "adult",
+    "401": "normal",
+    "402": "normal",
+    "403": "normal",
+    "404": "normal",
+    "405": "normal",
+    "406": "normal",
+    "407": "normal",
+    "409": "normal",
+    "410": "adult",
+    "411": "adult",
+    "412": "adult",
+    "413": "adult",
+    "419": "normal",
+    "420": "normal",
+    "421": "normal",
+    "422": "normal",
+    "423": "normal",
+    "424": "adult",
+    "425": "adult",
+    "426": "adult",
+    "427": "normal",
+    "429": "adult",
+    "430": "adult",
+    "431": "adult",
+    "432": "adult",
+    "433": "adult",
+    "434": "normal",
+    "435": "normal",
+    "436": "adult",
+    "437": "adult",
+    "438": "normal",
+    "439": "normal",
+    "441": "normal",
+    "442": "normal",
+    "443": "normal",
+    "444": "normal",
+    "445": "adult",
+    "446": "adult",
+    "447": "normal",
+    "448": "normal",
+    "449": "normal",
+    "450": "normal",
+    "adult": "adult",
+    "normal": "normal"
+  }
+}
