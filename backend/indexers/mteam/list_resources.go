@@ -1,0 +1,256 @@
+package mteam
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/internal/errors"
+	"github.com/gocolly/colly"
+	"github.com/rs/zerolog/log"
+)
+
+type searchRequest struct {
+	Mode       string   `json:"mode"` // "normal" or "adult"
+	Categories []string `json:"categories"`
+	Visible    int      `json:"visible"` // 1
+	PageNumber uint32   `json:"pageNumber"`
+	PageSize   uint32   `json:"pageSize"`
+	Keyword    string   `json:"keyword,omitempty"` // Optional keyword
+}
+
+type searchResponseItem struct {
+	ID               string   `json:"id"`
+	CreatedDate      string   `json:"createdDate"`
+	LastModifiedDate string   `json:"lastModifiedDate"`
+	Name             string   `json:"name"`
+	SmallDescr       string   `json:"smallDescr"`
+	Imdb             string   `json:"imdb"`
+	ImdbRating       string   `json:"imdbRating"`
+	Douban           string   `json:"douban"`
+	DoubanRating     string   `json:"doubanRating"`
+	DmmCode          string   `json:"dmmCode"` // a url to dmm.
+	Author           string   `json:"author"`
+	Category         string   `json:"category"`
+	Source           string   `json:"source"`
+	Medium           string   `json:"medium"`
+	Standard         string   `json:"standard"`
+	VideoCodec       string   `json:"videoCodec"`
+	AudioCodec       string   `json:"audioCodec"`
+	Team             string   `json:"team"`
+	Processing       string   `json:"processing"`
+	Countries        []string `json:"countries"`
+	Numfiles         string   `json:"numfiles"`
+	Size             string   `json:"size"`
+	Labels           string   `json:"labels"`
+	LabelsNew        []string `json:"labelsNew"`
+	MsUp             string   `json:"msUp"`
+	Anonymous        bool     `json:"anonymous"`
+	InfoHash         string   `json:"infoHash"`
+	Status           struct {
+		ID               string      `json:"id"`
+		CreatedDate      string      `json:"createdDate"`
+		LastModifiedDate string      `json:"lastModifiedDate"`
+		PickType         string      `json:"pickType"`
+		ToppingLevel     string      `json:"toppingLevel"`
+		ToppingEndTime   string      `json:"toppingEndTime"`
+		Discount         string      `json:"discount"`
+		DiscountEndTime  string      `json:"discountEndTime"`
+		TimesCompleted   string      `json:"timesCompleted"`
+		Comments         string      `json:"comments"`
+		LastAction       string      `json:"lastAction"`
+		LastSeederAction string      `json:"lastSeederAction"`
+		Views            string      `json:"views"`
+		Hits             string      `json:"hits"`
+		Support          string      `json:"support"`
+		Oppose           string      `json:"oppose"`
+		Status           string      `json:"status"`
+		Seeders          string      `json:"seeders"`
+		Leechers         string      `json:"leechers"`
+		Banned           bool        `json:"banned"`
+		Visible          bool        `json:"visible"`
+		PromotionRule    interface{} `json:"promotionRule"`  // never seen
+		MallSingleFree   interface{} `json:"mallSingleFree"` // unused
+	} `json:"status"`
+	DmmInfo struct {
+		CreatedDate      string   `json:"createdDate"`
+		LastModifiedDate string   `json:"lastModifiedDate"`
+		ID               string   `json:"id"`
+		ProductNumber    string   `json:"productNumber"`
+		Director         string   `json:"director"`
+		Series           string   `json:"series"`
+		Maker            string   `json:"maker"`
+		Label            string   `json:"label"`
+		KeywordList      []string `json:"keywordList"`
+		ActressList      []string `json:"actressList"`
+	} `json:"dmmInfo"`
+	EditedBy   interface{} `json:"editedBy"` // never seen
+	EditDate   string      `json:"editDate"`
+	Collection bool        `json:"collection"`
+	InRss      bool        `json:"inRss"`
+	CanVote    bool        `json:"canVote"`
+	ImageList  []string    `json:"imageList"`
+	ResetBox   string      `json:"resetBox"`
+}
+
+func (it *searchResponseItem) resolution() string {
+	switch it.Standard {
+	case "1":
+		return indexers.Resolution1080p
+	case "2":
+		return indexers.Resolution1080i
+	case "3":
+		return indexers.Resolution720p
+	case "5":
+		return indexers.ResolutionSD
+	case "6":
+		return indexers.Resolution4K
+	case "7":
+		return indexers.Resolution8K
+	default:
+		return ""
+	}
+}
+
+func (it *searchResponseItem) extractDBInfo() []indexers.VideoDB {
+	var res []indexers.VideoDB
+
+	if it.Douban != "" {
+		res = append(res, indexers.VideoDB{
+			DB:     "douban",
+			Link:   it.Douban,
+			Rating: it.DoubanRating,
+		})
+	}
+
+	if it.Imdb != "" {
+		res = append(res, indexers.VideoDB{
+			DB:     "imdb",
+			Link:   it.Imdb,
+			Rating: it.ImdbRating,
+		})
+	}
+
+	if it.DmmCode != "" {
+		res = append(res, indexers.VideoDB{
+			DB:   "dmm",
+			Link: it.DmmCode,
+		})
+	}
+
+	return res
+}
+
+type searchResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		PageNumber string               `json:"pageNumber"`
+		PageSize   string               `json:"pageSize"`
+		Total      string               `json:"total"`
+		TotalPages string               `json:"totalPages"`
+		Data       []searchResponseItem `json:"data"`
+	} `json:"data"`
+}
+
+func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*indexers.ListResult, *errors.HTTPStatusError) {
+	// check category is known.
+	mode, ok := m.categories.CategoryToMode[category]
+	if !ok {
+		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid category")
+	}
+
+	req := &searchRequest{
+		Mode:       mode,
+		Categories: []string{category},
+		Visible:    1,
+		PageNumber: page,
+		PageSize:   pageSize,
+		Keyword:    keyword,
+	}
+
+	if category == categoryAdult || category == categoryNormal {
+		// root category use empty categories list
+		req.Categories = []string{}
+	}
+
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to marshal request")
+	}
+
+	var statusError *errors.HTTPStatusError
+	c := m.C.Clone()
+	var respData []byte
+	c.OnResponse(func(r *colly.Response) {
+		if r.StatusCode != http.StatusOK {
+			statusError = errors.NewHTTPStatusError(r.StatusCode, "search request failed")
+			log.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
+			return
+		}
+		respData = r.Body
+	})
+
+	reqErr := c.Request(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData), nil, m.authHeader())
+	if reqErr != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to send request")
+	}
+	if statusError != nil {
+		return nil, statusError
+	}
+
+	var resp searchResponse
+	err = json.Unmarshal(respData, &resp)
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to unmarshal response")
+	}
+
+	if resp.Code != "0" {
+		log.Error().Str("code", resp.Code).Str("message", resp.Message).Msg("API error")
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
+	}
+
+	page_, _ := strconv.Atoi(resp.Data.PageNumber)
+	pageSize_, _ := strconv.Atoi(resp.Data.PageSize)
+	total, _ := strconv.Atoi(resp.Data.Total)
+	totalPages, _ := strconv.Atoi(resp.Data.TotalPages)
+
+	ListResult := &indexers.ListResult{
+		Pagination: indexers.Pagination{
+			Page:       uint32(page_),
+			PageSize:   uint32(pageSize_),
+			Total:      uint32(total),
+			TotalPages: uint32(totalPages),
+		},
+	}
+
+	for _, item := range resp.Data.Data {
+		if m.config.ExcludeGayContent && item.Category == categoryGayPorn {
+			continue
+		}
+
+		seeders, _ := strconv.Atoi(item.Status.Seeders)
+		leechers, _ := strconv.Atoi(item.Status.Leechers)
+
+		image := ""
+		if len(item.ImageList) > 0 {
+			image = item.ImageList[0]
+		}
+
+		ListResult.Resources = append(ListResult.Resources, indexers.Resource{
+			ID:         item.ID,
+			Title:      item.Name,
+			Title2:     item.SmallDescr,
+			Category:   item.Category,
+			Resolution: item.resolution(),
+			Seeders:    uint32(seeders),
+			Leechers:   uint32(leechers),
+			DBs:        item.extractDBInfo(),
+			Image:      image,
+		})
+	}
+
+	return ListResult, nil
+}

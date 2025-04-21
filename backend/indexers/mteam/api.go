@@ -7,6 +7,7 @@ import (
 	_ "embed"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/scraper"
 	"github.com/rs/zerolog/log"
 )
@@ -75,14 +76,10 @@ func (m *MTeam) authHeader() http.Header {
 	return h
 }
 
-func (m *MTeam) Categories() ([]indexers.Category, error) {
+func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return m.categories.Categories, nil
 }
 
-func (m *MTeam) List(categories []string, keyword string, page, pageSize uint32) ([]indexers.Resource, error) {
-	return nil, nil
-}
-
-func (m *MTeam) Detail(id string) (indexers.Resource, error) {
+func (m *MTeam) Detail(id string) (indexers.Resource, *errors.HTTPStatusError) {
 	return indexers.Resource{}, nil
 }
