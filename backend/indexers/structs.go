@@ -80,9 +80,15 @@ type ListResourceItem struct {
 	Images     []string  `json:"images,omitempty"`
 }
 
+type File struct {
+	Name string `json:"name"`
+	Size uint64 `json:"size"`
+}
+
 type ResourceDetail struct {
 	ListResourceItem
 
 	Mediainfo   string `json:"mediainfo,omitempty"`
 	Description string `json:"description,omitempty"`
+	Files       []File `json:"files,omitempty"`
 }
