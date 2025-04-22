@@ -106,3 +106,18 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestDetail(t *testing.T) {
+	if apiKey == "" {
+		t.Skip("MTEAM_API_KEY not set")
+	}
+
+	m := NewMTeam(&Config{
+		APIKey: apiKey,
+	})
+	require.NotNil(t, m)
+
+	res, err := m.Detail("947796")
+	require.Nil(t, err)
+	assert.NotNil(t, res)
+}

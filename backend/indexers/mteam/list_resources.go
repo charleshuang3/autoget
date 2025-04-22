@@ -161,9 +161,6 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to marshal request")
 	}
 
-	client := http.Client{
-		Timeout: httpTimeout,
-	}
 	request, err := http.NewRequest(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData))
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to new request")
@@ -172,6 +169,9 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("x-api-key", m.config.APIKey)
 
+	client := http.Client{
+		Timeout: httpTimeout,
+	}
 	r, err := client.Do(request)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to request")
