@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,7 +118,29 @@ func TestDetail(t *testing.T) {
 	})
 	require.NotNil(t, m)
 
-	res, err := m.Detail("947796")
+	res, err := m.Detail("947796", true)
 	require.Nil(t, err)
 	assert.NotNil(t, res)
+}
+
+func TestDownload(t *testing.T) {
+	if apiKey == "" {
+		t.Skip("MTEAM_API_KEY not set")
+	}
+
+	m := NewMTeam(&Config{
+		APIKey: apiKey,
+	})
+	require.NotNil(t, m)
+
+	dir := t.TempDir()
+	res, err := m.Download("947796", dir)
+	require.Nil(t, err)
+
+	assert.NotEmpty(t, res.TorrentFilePath)
+	assert.Empty(t, res.Magnet)
+	assert.FileExists(t, res.TorrentFilePath)
+
+	_, er := metainfo.LoadFromFile(res.TorrentFilePath)
+	require.NoError(t, er)
 }

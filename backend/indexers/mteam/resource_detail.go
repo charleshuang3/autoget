@@ -39,7 +39,7 @@ type filesResponse struct {
 	} `json:"data"`
 }
 
-func (m *MTeam) Detail(id string) (*indexers.ResourceDetail, *errors.HTTPStatusError) {
+func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *errors.HTTPStatusError) {
 	_, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid id")
@@ -77,6 +77,10 @@ func (m *MTeam) Detail(id string) (*indexers.ResourceDetail, *errors.HTTPStatusE
 		},
 		Mediainfo:   resp.Data.Mediainfo,
 		Description: resp.Data.Descr,
+	}
+
+	if !fileList {
+		return res, nil
 	}
 
 	filesResp := &filesResponse{}

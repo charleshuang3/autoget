@@ -15,7 +15,10 @@ type IIndexer interface {
 	List(category, keyword string, page, pageSize uint32) (*ListResult, *errors.HTTPStatusError)
 
 	// Detail of a resource.
-	Detail(id string) (*ResourceDetail, *errors.HTTPStatusError)
+	Detail(id string, fileList bool) (*ResourceDetail, *errors.HTTPStatusError)
+
+	// Download the torrent file to given dir or return the magnet link.
+	Download(id, dir string) (*DownloadResult, *errors.HTTPStatusError)
 }
 
 type IndexerBasicInfo struct {
@@ -91,4 +94,9 @@ type ResourceDetail struct {
 	Mediainfo   string `json:"mediainfo,omitempty"`
 	Description string `json:"description,omitempty"`
 	Files       []File `json:"files,omitempty"`
+}
+
+type DownloadResult struct {
+	Magnet          string
+	TorrentFilePath string
 }
