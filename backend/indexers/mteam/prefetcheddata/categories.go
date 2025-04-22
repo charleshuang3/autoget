@@ -58,8 +58,8 @@ type listCategories struct {
 	} `json:"data"`
 
 	// We don't use following fields
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    interface{} `json:"code"`
+	Message string      `json:"message"`
 }
 
 // categoryWithOrder has same json definition with indexers.Category.

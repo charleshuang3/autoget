@@ -1,8 +1,6 @@
 package indexers
 
 import (
-	"time"
-
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 )
 
@@ -17,9 +15,7 @@ type IIndexer interface {
 	List(category, keyword string, page, pageSize uint32) (*ListResult, *errors.HTTPStatusError)
 
 	// Detail of a resource.
-	Detail(id string) (ListResourceItem, *errors.HTTPStatusError)
-
-	SetRequestTimeout(timeout time.Duration)
+	Detail(id string) (*ResourceDetail, *errors.HTTPStatusError)
 }
 
 type IndexerBasicInfo struct {
@@ -81,5 +77,12 @@ type ListResourceItem struct {
 	Seeders    uint32    `json:"seeders"`
 	Leechers   uint32    `json:"leechers"`
 	DBs        []VideoDB `json:"dbs,omitempty"`
-	Image      string    `json:"image,omitempty"`
+	Images     []string  `json:"images,omitempty"`
+}
+
+type ResourceDetail struct {
+	ListResourceItem
+
+	Mediainfo   string `json:"mediainfo,omitempty"`
+	Description string `json:"description,omitempty"`
 }

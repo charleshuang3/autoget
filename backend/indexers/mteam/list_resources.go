@@ -8,7 +8,6 @@ import (
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
-	"github.com/gocolly/colly"
 	"github.com/rs/zerolog/log"
 )
 
@@ -162,31 +161,29 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to marshal request")
 	}
 
-	var statusError *errors.HTTPStatusError
-	c := m.C.Clone()
-	var respData []byte
-	c.OnResponse(func(r *colly.Response) {
-		if r.StatusCode != http.StatusOK {
-			statusError = errors.NewHTTPStatusError(r.StatusCode, "search request failed")
-			log.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
-			return
-		}
-		respData = r.Body
-	})
-
-	h := m.authHeader()
-	h.Set("Content-Type", "application/json")
-
-	reqErr := c.Request(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData), nil, h)
-	if reqErr != nil {
-		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to send request")
+	client := http.Client{
+		Timeout: httpTimeout,
 	}
-	if statusError != nil {
-		return nil, statusError
+	request, err := http.NewRequest(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData))
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to new request")
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("x-api-key", m.config.APIKey)
+
+	r, err := client.Do(request)
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to request")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		log.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
+		return nil, errors.NewHTTPStatusError(r.StatusCode, "search request failed")
 	}
 
 	var resp searchResponse
-	err = json.Unmarshal(respData, &resp)
+	err = json.NewDecoder(r.Body).Decode(&resp)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to unmarshal response")
 	}
@@ -219,9 +216,9 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 		leechers, _ := strconv.Atoi(item.Status.Leechers)
 		size, _ := strconv.ParseUint(item.Size, 10, 64)
 
-		image := ""
+		images := []string{}
 		if len(item.ImageList) > 0 {
-			image = item.ImageList[0]
+			images = append(images, item.ImageList[0])
 		}
 
 		ListResult.Resources = append(ListResult.Resources, indexers.ListResourceItem{
@@ -234,7 +231,7 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 			Seeders:    uint32(seeders),
 			Leechers:   uint32(leechers),
 			DBs:        item.extractDBInfo(),
-			Image:      image,
+			Images:     images,
 		})
 	}
 
