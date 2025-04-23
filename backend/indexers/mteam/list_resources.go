@@ -246,6 +246,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 			Leechers:   uint32(leechers),
 			DBs:        item.extractDBInfo(),
 			Images:     images,
+			Free:       item.Status.Discount == "FREE",
 		})
 	}
 

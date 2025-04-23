@@ -74,6 +74,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 			Leechers:   uint32(leechers),
 			DBs:        resp.Data.extractDBInfo(),
 			Images:     resp.Data.ImageList,
+			Free:       resp.Data.Status.Discount == "FREE",
 		},
 		Mediainfo:   resp.Data.Mediainfo,
 		Description: resp.Data.Descr,

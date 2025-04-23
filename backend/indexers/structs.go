@@ -81,6 +81,7 @@ type ListResourceItem struct {
 	Leechers   uint32    `json:"leechers"`
 	DBs        []VideoDB `json:"dbs,omitempty"`
 	Images     []string  `json:"images,omitempty"`
+	Free       bool      `json:"free,omitempty"`
 }
 
 type File struct {
