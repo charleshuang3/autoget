@@ -58,23 +58,25 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 
+	time, _ := parseTime(resp.Data.CreatedDate)
 	seeders, _ := strconv.Atoi(resp.Data.Status.Seeders)
 	leechers, _ := strconv.Atoi(resp.Data.Status.Leechers)
 	size, _ := strconv.ParseUint(resp.Data.Size, 10, 64)
 
 	res := &indexers.ResourceDetail{
 		ListResourceItem: indexers.ListResourceItem{
-			ID:         resp.Data.ID,
-			Title:      resp.Data.Name,
-			Title2:     resp.Data.SmallDescr,
-			Category:   m.prefetched.Categories.Infos[resp.Data.Category].Name,
-			Size:       size,
-			Resolution: m.prefetched.Standards[resp.Data.Standard],
-			Seeders:    uint32(seeders),
-			Leechers:   uint32(leechers),
-			DBs:        resp.Data.extractDBInfo(),
-			Images:     resp.Data.ImageList,
-			Free:       resp.Data.Status.Discount == "FREE",
+			ID:          resp.Data.ID,
+			Title:       resp.Data.Name,
+			Title2:      resp.Data.SmallDescr,
+			CreatedDate: time,
+			Category:    m.prefetched.Categories.Infos[resp.Data.Category].Name,
+			Size:        size,
+			Resolution:  m.prefetched.Standards[resp.Data.Standard],
+			Seeders:     uint32(seeders),
+			Leechers:    uint32(leechers),
+			DBs:         resp.Data.extractDBInfo(),
+			Images:      resp.Data.ImageList,
+			Free:        resp.Data.Status.Discount == "FREE",
 		},
 		Mediainfo:   resp.Data.Mediainfo,
 		Description: resp.Data.Descr,

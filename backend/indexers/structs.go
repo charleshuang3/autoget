@@ -71,17 +71,18 @@ type VideoDB struct {
 }
 
 type ListResourceItem struct {
-	ID         string    `json:"id"`
-	Title      string    `json:"title"`
-	Title2     string    `json:"title2,omitempty"`
-	Category   string    `json:"category"`
-	Size       uint64    `json:"size"`
-	Resolution string    `json:"resolution,omitempty"`
-	Seeders    uint32    `json:"seeders"`
-	Leechers   uint32    `json:"leechers"`
-	DBs        []VideoDB `json:"dbs,omitempty"`
-	Images     []string  `json:"images,omitempty"`
-	Free       bool      `json:"free,omitempty"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Title2      string    `json:"title2,omitempty"`
+	CreatedDate int64     `json:"createdDate,omitempty"` // in unix timestamp
+	Category    string    `json:"category"`
+	Size        uint64    `json:"size"`
+	Resolution  string    `json:"resolution,omitempty"`
+	Seeders     uint32    `json:"seeders"`
+	Leechers    uint32    `json:"leechers"`
+	DBs         []VideoDB `json:"dbs,omitempty"`
+	Images      []string  `json:"images,omitempty"`
+	Free        bool      `json:"free,omitempty"`
 }
 
 type File struct {

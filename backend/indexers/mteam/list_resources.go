@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
@@ -226,6 +227,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 			continue
 		}
 
+		time, _ := parseTime(item.CreatedDate)
 		seeders, _ := strconv.Atoi(item.Status.Seeders)
 		leechers, _ := strconv.Atoi(item.Status.Leechers)
 		size, _ := strconv.ParseUint(item.Size, 10, 64)
@@ -236,19 +238,33 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 		}
 
 		ListResult.Resources = append(ListResult.Resources, indexers.ListResourceItem{
-			ID:         item.ID,
-			Title:      item.Name,
-			Title2:     item.SmallDescr,
-			Category:   m.prefetched.Categories.Infos[item.Category].Name,
-			Size:       size,
-			Resolution: m.prefetched.Standards[item.Standard],
-			Seeders:    uint32(seeders),
-			Leechers:   uint32(leechers),
-			DBs:        item.extractDBInfo(),
-			Images:     images,
-			Free:       item.Status.Discount == "FREE",
+			ID:          item.ID,
+			Title:       item.Name,
+			Title2:      item.SmallDescr,
+			CreatedDate: time,
+			Category:    m.prefetched.Categories.Infos[item.Category].Name,
+			Size:        size,
+			Resolution:  m.prefetched.Standards[item.Standard],
+			Seeders:     uint32(seeders),
+			Leechers:    uint32(leechers),
+			DBs:         item.extractDBInfo(),
+			Images:      images,
+			Free:        item.Status.Discount == "FREE",
 		})
 	}
 
 	return ListResult, nil
+}
+
+var (
+	// MTeam return time in Shanghai timezone.
+	shanghaiLoc, _ = time.LoadLocation("Asia/Shanghai")
+)
+
+func parseTime(s string) (int64, error) {
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", s, shanghaiLoc)
+	if err != nil {
+		return 0, err
+	}
+	return t.Unix(), nil
 }
