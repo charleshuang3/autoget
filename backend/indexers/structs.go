@@ -12,7 +12,7 @@ type IIndexer interface {
 	Categories() ([]Category, *errors.HTTPStatusError)
 
 	// List resources in given category and keyword (optional).
-	List(category, keyword string, page, pageSize uint32) (*ListResult, *errors.HTTPStatusError)
+	List(req *ListRequest) (*ListResult, *errors.HTTPStatusError)
 
 	// Detail of a resource.
 	Detail(id string, fileList bool) (*ResourceDetail, *errors.HTTPStatusError)
@@ -99,4 +99,13 @@ type ResourceDetail struct {
 type DownloadResult struct {
 	Magnet          string
 	TorrentFilePath string
+}
+
+type ListRequest struct {
+	Category  string
+	Keyword   string
+	Page      uint32
+	PageSize  uint32
+	Free      bool
+	Standards []string // See Resolution* for options
 }

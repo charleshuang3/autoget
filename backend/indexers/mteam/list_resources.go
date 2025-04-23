@@ -14,10 +14,14 @@ import (
 type searchRequest struct {
 	Mode       string   `json:"mode"` // "normal" or "adult"
 	Categories []string `json:"categories"`
-	Visible    int      `json:"visible"` // 1
+	Visible    int      `json:"visible"` // fixed 1
 	PageNumber uint32   `json:"pageNumber"`
 	PageSize   uint32   `json:"pageSize"`
-	Keyword    string   `json:"keyword,omitempty"` // Optional keyword
+
+	// Optional
+	Keyword   string   `json:"keyword,omitempty"`
+	Discount  string   `json:"discount,omitempty"` // "FREE" or ""
+	Standards []string `json:"standards,omitempty"`
 }
 
 type searchResponseItem struct {
@@ -135,9 +139,9 @@ type searchResponse struct {
 	} `json:"data"`
 }
 
-func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*indexers.ListResult, *errors.HTTPStatusError) {
+func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *errors.HTTPStatusError) {
 	// check category is known.
-	cat, ok := m.prefetched.Categories.Infos[category]
+	cat, ok := m.prefetched.Categories.Infos[listReq.Category]
 	if !ok {
 		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid category")
 	}
@@ -146,12 +150,22 @@ func (m *MTeam) List(category string, keyword string, page, pageSize uint32) (*i
 		Mode:       cat.Mode,
 		Categories: cat.Categories,
 		Visible:    1,
-		PageNumber: page,
-		PageSize:   pageSize,
-		Keyword:    keyword,
+		PageNumber: listReq.Page,
+		PageSize:   listReq.PageSize,
+		Keyword:    listReq.Keyword,
 	}
 
-	if category == categoryAdult || category == categoryNormal {
+	if listReq.Free {
+		req.Discount = "FREE"
+	}
+
+	for _, standard := range listReq.Standards {
+		if st, ok := m.standards[standard]; ok {
+			req.Standards = append(req.Standards, st)
+		}
+	}
+
+	if listReq.Category == categoryAdult || listReq.Category == categoryNormal {
 		// root category use empty categories list
 		req.Categories = []string{}
 	}

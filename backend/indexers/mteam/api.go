@@ -46,6 +46,7 @@ type MTeam struct {
 	config *Config
 
 	prefetched *prefetcheddata.Data
+	standards  map[string]string
 }
 
 func NewMTeam(config *Config) *MTeam {
@@ -55,12 +56,17 @@ func NewMTeam(config *Config) *MTeam {
 	m := &MTeam{
 		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(name, true),
 		config:           config,
+		standards:        map[string]string{},
 	}
 
 	var err error
 	m.prefetched, err = prefetcheddata.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Failed to read prefetched data: %v", err)
+	}
+
+	for k, v := range m.prefetched.Standards {
+		m.standards[v] = k
 	}
 
 	return m

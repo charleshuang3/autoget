@@ -42,11 +42,13 @@ func TestList(t *testing.T) {
 	require.NotNil(t, m)
 
 	tests := []struct {
-		name     string
-		category string
-		keyword  string
-		page     uint32
-		pageSize uint32
+		name      string
+		category  string
+		keyword   string
+		page      uint32
+		pageSize  uint32
+		free      bool
+		standards []string
 	}{
 		{
 			name:     "normal root",
@@ -97,11 +99,39 @@ func TestList(t *testing.T) {
 			page:     1,
 			pageSize: 2,
 		},
+		{
+			name:     "normal with standards",
+			category: "adult",
+			page:     1,
+			pageSize: 2,
+			standards: []string{
+				indexers.Resolution8K,
+				indexers.Resolution4K,
+				indexers.Resolution1080p,
+				indexers.Resolution1080i,
+				indexers.Resolution720p,
+				indexers.ResolutionSD,
+			},
+		},
+		{
+			name:     "normal with free",
+			category: "adult",
+			page:     1,
+			pageSize: 2,
+			free:     true,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := m.List(tc.category, tc.keyword, tc.page, tc.pageSize)
+			got, err := m.List(&indexers.ListRequest{
+				Category:  tc.category,
+				Keyword:   tc.keyword,
+				Page:      tc.page,
+				PageSize:  tc.pageSize,
+				Free:      tc.free,
+				Standards: tc.standards,
+			})
 			require.Nil(t, err)
 			assert.NotEmpty(t, got.Resources)
 		})
