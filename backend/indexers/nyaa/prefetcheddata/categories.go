@@ -1,6 +1,12 @@
 package prefetcheddata
 
-import "github.com/charleshuang3/autoget/backend/indexers"
+import (
+	"maps"
+	"slices"
+	"strings"
+
+	"github.com/charleshuang3/autoget/backend/indexers"
+)
 
 var (
 	Categories = map[string]indexers.Category{
@@ -29,4 +35,8 @@ var (
 		"6_1": {ID: "6_1", Name: "Software - Apps"},
 		"6_2": {ID: "6_2", Name: "Software - Games"},
 	}
+
+	CategoriesList = slices.SortedFunc(maps.Values(Categories), func(a, b indexers.Category) int {
+		return strings.Compare(a.ID, b.ID)
+	})
 )
