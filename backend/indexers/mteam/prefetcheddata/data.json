@@ -234,26 +234,6 @@
             "NumericID": 110
           },
           {
-            "id": "443",
-            "name": "教育",
-            "subCategories": [
-              {
-                "id": "427",
-                "name": "教育書面",
-                "Order": 1,
-                "NumericID": 427
-              },
-              {
-                "id": "441",
-                "name": "教育(影片)",
-                "Order": 2,
-                "NumericID": 441
-              }
-            ],
-            "Order": 5,
-            "NumericID": 443
-          },
-          {
             "id": "447",
             "name": "遊戲",
             "subCategories": [
@@ -298,6 +278,12 @@
                 "NumericID": 407
               },
               {
+                "id": "427",
+                "name": "電子書",
+                "Order": 1,
+                "NumericID": 427
+              },
+              {
                 "id": "422",
                 "name": "软件",
                 "Order": 2,
@@ -308,6 +294,12 @@
                 "name": "有聲書",
                 "Order": 3,
                 "NumericID": 442
+              },
+              {
+                "id": "451",
+                "name": "教育影片",
+                "Order": 3,
+                "NumericID": 451
               },
               {
                 "id": "409",
@@ -516,7 +508,7 @@
         ]
       },
       "427": {
-        "name": "教育書面",
+        "name": "電子書",
         "mode": "normal",
         "categories": [
           "427"
@@ -599,26 +591,11 @@
           "439"
         ]
       },
-      "441": {
-        "name": "教育(影片)",
-        "mode": "normal",
-        "categories": [
-          "441"
-        ]
-      },
       "442": {
         "name": "有聲書",
         "mode": "normal",
         "categories": [
           "442"
-        ]
-      },
-      "443": {
-        "name": "教育",
-        "mode": "normal",
-        "categories": [
-          "427",
-          "441"
         ]
       },
       "444": {
@@ -672,9 +649,18 @@
         "mode": "normal",
         "categories": [
           "407",
+          "427",
           "422",
           "442",
+          "451",
           "409"
+        ]
+      },
+      "451": {
+        "name": "教育影片",
+        "mode": "normal",
+        "categories": [
+          "451"
         ]
       },
       "adult": {
@@ -1390,11 +1376,9 @@
     "45": "CTRL",
     "48": "ZTR",
     "49": "126811",
-    "51": "FatTiger",
-    "54": "Eaiqc",
-    "55": "WLWEB",
     "56": "XieBiAn",
     "57": "DST",
+    "58": "ZimaWeb",
     "6": "BMDru",
     "8": "Pack",
     "9": "MTeam"
