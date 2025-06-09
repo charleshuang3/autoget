@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	baseURL = "https://nyaa.si/"
+	baseURL = "https://sukebei.nyaa.si/"
 )
 
 func TestCategories(t *testing.T) {
