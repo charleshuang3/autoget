@@ -15,8 +15,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	httpClient = http.DefaultClient
+)
+
 const (
-	defaultBaseURL = "https://nyaa.si/"
+	defaultBaseURL  = "https://nyaa.si/"
+	defaultPageSize = 75
 )
 
 type Config struct {
@@ -52,8 +57,106 @@ func (c *Client) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 
 // List resources in given category and keyword (optional).
 func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.HTTPStatusError) {
-	return nil, nil
+	// Nyaa only support following query params
+	q := url.Values{}
+	if req.Category != "" {
+		q.Set("c", req.Category)
+	}
+	if req.Keyword != "" {
+		q.Set("q", req.Keyword)
+	}
+	if req.Page > 0 {
+		q.Set("p", strconv.Itoa(int(req.Page)))
+	}
 
+	u, err := url.Parse(c.config.GetBaseURL())
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
+	}
+
+	u.RawQuery = q.Encode()
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to fetch list page: %v", err))
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to read response body: %v", err))
+	}
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to parse HTML: %v", err))
+	}
+
+	var resources []indexers.ListResourceItem
+	doc.Find("table.torrent-list tbody tr").Each(func(i int, s *goquery.Selection) {
+		item := indexers.ListResourceItem{}
+
+		// Column 1: Category
+		categoryLink := s.Find("td:nth-child(1) a").AttrOr("href", "")
+		if categoryLink != "" {
+			item.Category = prefetcheddata.Categories[strings.TrimPrefix(categoryLink, "/?c=")].Name
+		}
+
+		// Column 2: Title and ID
+		titleLink := s.Find("td:nth-child(2) a").Last()
+		item.Title = strings.TrimSpace(titleLink.Text())
+		idLink, exists := titleLink.Attr("href")
+		if exists {
+			item.ID = strings.TrimPrefix(idLink, "/view/")
+		}
+
+		// Column 4: Size
+		item.Size, _ = humanSizeToBytes(s.Find("td:nth-child(4)").Text())
+
+		// Column 5: CreatedDate
+		timestampStr, exists := s.Find("td:nth-child(5)").Attr("data-timestamp")
+		if exists {
+			timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
+			if err == nil {
+				item.CreatedDate = timestamp
+			}
+		}
+
+		// Column 6: Seeders
+		seedersStr := s.Find("td:nth-child(6)").Text()
+		seeders, err := strconv.ParseUint(seedersStr, 10, 32)
+		if err == nil {
+			item.Seeders = uint32(seeders)
+		}
+
+		// Column 7: Leechers
+		leechersStr := s.Find("td:nth-child(7)").Text()
+		leechers, err := strconv.ParseUint(leechersStr, 10, 32)
+		if err == nil {
+			item.Leechers = uint32(leechers)
+		}
+
+		resources = append(resources, item)
+	})
+
+	// Pagination
+	page := doc.Find("ul.pagination li.active").First().Text()
+	page = strings.Replace(page, "(current)", "", -1) // Remove "(current)"
+	page = strings.TrimSpace(page)                    // Trim leading/trailing whitespace
+	currentPage, _ := strconv.Atoi(page)
+
+	listResult := &indexers.ListResult{
+		Pagination: indexers.Pagination{
+			Page: uint32(currentPage),
+			// Nyaa does not provide following information
+			TotalPages: 0,
+			PageSize:   defaultPageSize,
+			Total:      0,
+		},
+		Resources: resources,
+	}
+
+	return listResult, nil
 }
 
 // Detail of a resource.
@@ -63,7 +166,7 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to fetch detail page: %v", err))
 	}
