@@ -24,7 +24,7 @@ func (m *MTeam) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTP
 	}
 
 	resp := &genDownloadLinkResponse{}
-	er := makeMultipartAPICall(m.config.GetBaseURL(), "/api/torrent/genDlToken", m.config.APIKey, map[string]string{
+	er := makeMultipartAPICall(m.config.getBaseURL(), "/api/torrent/genDlToken", m.config.APIKey, map[string]string{
 		"id": id,
 	}, resp)
 	if er != nil {

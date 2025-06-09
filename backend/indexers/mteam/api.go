@@ -33,7 +33,7 @@ type Config struct {
 	ExcludeGayContent bool   `yaml:"exclude_gay_content"`
 }
 
-func (c *Config) GetBaseURL() string {
+func (c *Config) getBaseURL() string {
 	if c.BaseURL == "" {
 		return defaultBaseURL
 	}

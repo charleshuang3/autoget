@@ -176,7 +176,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to marshal request")
 	}
 
-	request, err := http.NewRequest(http.MethodPost, m.config.GetBaseURL()+"/api/torrent/search", bytes.NewReader(reqData))
+	request, err := http.NewRequest(http.MethodPost, m.config.getBaseURL()+"/api/torrent/search", bytes.NewReader(reqData))
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, "failed to new request")
 	}

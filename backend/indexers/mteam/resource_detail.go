@@ -46,7 +46,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 	}
 
 	resp := &detailResponse{}
-	er := makeMultipartAPICall(m.config.GetBaseURL(), "/api/torrent/detail", m.config.APIKey, map[string]string{
+	er := makeMultipartAPICall(m.config.getBaseURL(), "/api/torrent/detail", m.config.APIKey, map[string]string{
 		"id": id,
 	}, resp)
 	if er != nil {
@@ -87,7 +87,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 	}
 
 	filesResp := &filesResponse{}
-	er = makeMultipartAPICall(m.config.GetBaseURL(), "/api/torrent/files", m.config.APIKey, map[string]string{
+	er = makeMultipartAPICall(m.config.getBaseURL(), "/api/torrent/files", m.config.APIKey, map[string]string{
 		"id": id,
 	}, filesResp)
 	if er != nil {
