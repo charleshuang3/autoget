@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -27,24 +28,48 @@ const (
 )
 
 type Config struct {
-	BaseURL string `yaml:"base_url"`
+	BaseURL  string `yaml:"base_url"`
+	UseProxy bool   `yaml:"use_proxy"`
+	ProxyURL string
 }
 
 type Client struct {
 	config *Config
 }
 
-func (c *Config) GetBaseURL() string {
+func (c *Config) getBaseURL() string {
 	if c.BaseURL == "" {
 		return defaultBaseURL
 	}
 	return c.BaseURL
 }
 
+func (c *Config) proxyURL() string {
+	if c.ProxyURL != "" {
+		return c.ProxyURL
+	}
+	return os.Getenv("HTTP_PROXY")
+}
+
 func NewClient(config *Config) *Client {
-	return &Client{
+	c := &Client{
 		config: config,
 	}
+
+	if config.UseProxy {
+		proxyURL := config.proxyURL()
+		if proxyURL != "" {
+			proxy, err := url.Parse(proxyURL)
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to parse proxy URL")
+			}
+			httpClient.Transport = &http.Transport{
+				Proxy: http.ProxyURL(proxy),
+			}
+		}
+	}
+
+	return c
 }
 
 // Name of the indexer.
@@ -71,7 +96,7 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 		q.Set("p", strconv.Itoa(int(req.Page)))
 	}
 
-	u, err := url.Parse(c.config.GetBaseURL())
+	u, err := url.Parse(c.config.getBaseURL())
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
@@ -163,7 +188,7 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 
 // Detail of a resource.
 func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *errors.HTTPStatusError) {
-	url, err := url.JoinPath(c.config.GetBaseURL(), "view", id)
+	url, err := url.JoinPath(c.config.getBaseURL(), "view", id)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
@@ -291,7 +316,7 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 func (c *Client) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
 	fileName := fmt.Sprintf("%s.torrent", id)
 
-	url, err := url.JoinPath(c.config.GetBaseURL(), "download", fileName)
+	url, err := url.JoinPath(c.config.getBaseURL(), "download", fileName)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
