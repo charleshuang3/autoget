@@ -18,6 +18,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	_ indexers.IIndexer = (*Client)(nil)
+)
+
 const (
 	defaultBaseURL  = "https://nyaa.si/"
 	defaultPageSize = 75

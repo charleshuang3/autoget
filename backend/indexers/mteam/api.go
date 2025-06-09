@@ -11,6 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	_ indexers.IIndexer = (*MTeam)(nil)
+)
+
 const (
 	name           = "m-team"
 	defaultBaseURL = "https://api.m-team.cc"
