@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
+	"github.com/charleshuang3/autoget/backend/internal/helpers"
 	"github.com/rs/zerolog/log"
 )
 
@@ -287,8 +289,21 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 
 // Download the torrent file to given dir or return the magnet link.
 func (c *Client) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
-	return nil, nil
+	fileName := fmt.Sprintf("%s.torrent", id)
 
+	url, err := url.JoinPath(c.config.GetBaseURL(), "download", fileName)
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
+	}
+
+	err = helpers.DownloadFileFromURL(httpClient, url, filepath.Join(dir, fileName))
+	if err != nil {
+		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
+	}
+
+	return &indexers.DownloadResult{
+		TorrentFilePath: filepath.Join(dir, fileName),
+	}, nil
 }
 
 func humanSizeToBytes(sizeStr string) (uint64, error) {

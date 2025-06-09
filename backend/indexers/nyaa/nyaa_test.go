@@ -131,3 +131,12 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestDownload(t *testing.T) {
+	n := NewClient(&Config{})
+	dir := t.TempDir()
+	got, err := n.Download("1980585", dir)
+	require.Nil(t, err)
+	assert.NotEmpty(t, got.TorrentFilePath)
+	assert.FileExists(t, got.TorrentFilePath)
+}
