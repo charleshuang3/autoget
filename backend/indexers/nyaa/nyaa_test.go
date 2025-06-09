@@ -13,6 +13,7 @@ func TestCategories(t *testing.T) {
 	got, err := n.Categories()
 	require.Nil(t, err)
 	assert.NotEmpty(t, got)
+	assert.Equal(t, "Anime - English", got[3].Name)
 }
 
 func TestDetail(t *testing.T) {

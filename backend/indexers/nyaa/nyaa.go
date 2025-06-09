@@ -18,10 +18,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	httpClient = http.DefaultClient
-)
-
 const (
 	defaultBaseURL  = "https://nyaa.si/"
 	defaultPageSize = 75
@@ -30,40 +26,54 @@ const (
 type Config struct {
 	BaseURL  string `yaml:"base_url"`
 	UseProxy bool   `yaml:"use_proxy"`
-	ProxyURL string
+
+	proxyURL string
 }
 
-type Client struct {
-	config *Config
+func (c *Config) SetProxyURL(proxyURL string) {
+	c.proxyURL = proxyURL
 }
 
-func (c *Config) getBaseURL() string {
-	if c.BaseURL == "" {
-		return defaultBaseURL
-	}
-	return c.BaseURL
-}
-
-func (c *Config) proxyURL() string {
-	if c.ProxyURL != "" {
-		return c.ProxyURL
+func (c *Config) getProxyURL() string {
+	if c.proxyURL != "" {
+		return c.proxyURL
 	}
 	return os.Getenv("HTTP_PROXY")
 }
 
+type Client struct {
+	config     *Config
+	httpClient *http.Client
+
+	DefaultBaseURL string
+	CategoriesMap  map[string]indexers.Category
+	CategoriesList []indexers.Category
+}
+
+func (c *Client) getBaseURL() string {
+	if c.config.BaseURL == "" {
+		return c.DefaultBaseURL
+	}
+	return c.config.BaseURL
+}
+
 func NewClient(config *Config) *Client {
 	c := &Client{
-		config: config,
+		config:         config,
+		httpClient:     http.DefaultClient,
+		DefaultBaseURL: defaultBaseURL,
+		CategoriesMap:  prefetcheddata.Categories,
+		CategoriesList: prefetcheddata.CategoriesList,
 	}
 
 	if config.UseProxy {
-		proxyURL := config.proxyURL()
+		proxyURL := config.getProxyURL()
 		if proxyURL != "" {
 			proxy, err := url.Parse(proxyURL)
 			if err != nil {
 				log.Fatal().Err(err).Msg("failed to parse proxy URL")
 			}
-			httpClient.Transport = &http.Transport{
+			c.httpClient.Transport = &http.Transport{
 				Proxy: http.ProxyURL(proxy),
 			}
 		}
@@ -79,7 +89,7 @@ func (c *Client) Name() string {
 
 // Categories returns indexer's resource categories.
 func (c *Client) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
-	return prefetcheddata.CategoriesList, nil
+	return c.CategoriesList, nil
 }
 
 // List resources in given category and keyword (optional).
@@ -96,14 +106,14 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 		q.Set("p", strconv.Itoa(int(req.Page)))
 	}
 
-	u, err := url.Parse(c.config.getBaseURL())
+	u, err := url.Parse(c.getBaseURL())
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
 	u.RawQuery = q.Encode()
 
-	resp, err := http.Get(u.String())
+	resp, err := c.httpClient.Get(u.String())
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to fetch list page: %v", err))
 	}
@@ -126,7 +136,7 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 		// Column 1: Category
 		categoryLink := s.Find("td:nth-child(1) a").AttrOr("href", "")
 		if categoryLink != "" {
-			item.Category = prefetcheddata.Categories[strings.TrimPrefix(categoryLink, "/?c=")].Name
+			item.Category = c.CategoriesMap[strings.TrimPrefix(categoryLink, "/?c=")].Name
 		}
 
 		// Column 2: Title and ID
@@ -188,12 +198,12 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 
 // Detail of a resource.
 func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *errors.HTTPStatusError) {
-	url, err := url.JoinPath(c.config.getBaseURL(), "view", id)
+	url, err := url.JoinPath(c.getBaseURL(), "view", id)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
-	resp, err := httpClient.Get(url)
+	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to fetch detail page: %v", err))
 	}
@@ -246,7 +256,7 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 				links := s.Find("a")
 				href, exists := links.Last().Attr("href")
 				if exists {
-					detail.Category = prefetcheddata.Categories[strings.TrimPrefix(href, "/?c=")].Name
+					detail.Category = c.CategoriesMap[strings.TrimPrefix(href, "/?c=")].Name
 				}
 			}
 		case "File size:":
@@ -316,12 +326,12 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 func (c *Client) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
 	fileName := fmt.Sprintf("%s.torrent", id)
 
-	url, err := url.JoinPath(c.config.getBaseURL(), "download", fileName)
+	url, err := url.JoinPath(c.getBaseURL(), "download", fileName)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
-	err = helpers.DownloadFileFromURL(httpClient, url, filepath.Join(dir, fileName))
+	err = helpers.DownloadFileFromURL(c.httpClient, url, filepath.Join(dir, fileName))
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
 	}
