@@ -1,15 +1,13 @@
 package mteam
 
 import (
-	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
+	"github.com/charleshuang3/autoget/backend/internal/helpers"
 	"github.com/rs/zerolog/log"
 )
 
@@ -40,7 +38,7 @@ func (m *MTeam) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTP
 
 	destFilePath := filepath.Join(dir, name+"."+id+".torrent")
 
-	err = downloadFileFromURL(resp.Data, destFilePath)
+	err = helpers.DownloadFileFromURL(http.DefaultClient, resp.Data, destFilePath)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
 	}
@@ -48,33 +46,4 @@ func (m *MTeam) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTP
 	return &indexers.DownloadResult{
 		TorrentFilePath: destFilePath,
 	}, nil
-}
-
-// downloadFileFromURL downloads a file from a given URL and saves it to a specified local path.
-func downloadFileFromURL(url string, dest string) error {
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("HTTP GET error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP status error: %d %s", resp.StatusCode, resp.Status)
-	}
-
-	// Create the destination file
-	out, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer out.Close()
-
-	// Write the response body to the file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to copy response body to file: %w", err)
-	}
-
-	return nil
 }
