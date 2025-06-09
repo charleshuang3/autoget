@@ -300,26 +300,56 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 
 	// Extract Files
 	if fileList {
-		doc.Find(".torrent-file-list ul li").Each(func(i int, s *goquery.Selection) {
-			fileName := strings.TrimSpace(s.Contents().Not("span").Text())
-			fileSizeStr := s.Find(".file-size").Text()
-			fileSizeStr = strings.TrimPrefix(fileSizeStr, "(")
-			fileSizeStr = strings.TrimSuffix(fileSizeStr, ")")
-			fileSizeStr = strings.TrimSpace(fileSizeStr)
-
-			fileSize, err := humanSizeToBytes(fileSizeStr)
-			if err != nil {
-				log.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", fileSizeStr)
-			}
-
-			detail.Files = append(detail.Files, indexers.File{
-				Name: fileName,
-				Size: fileSize,
-			})
+		// Start parsing from the root of the file list
+		doc.Find(".torrent-file-list > ul").Each(func(i int, s *goquery.Selection) {
+			parseFileList(s, "", &detail.Files)
 		})
 	}
 
 	return detail, nil
+}
+
+// parseFileList recursively parses the <ul> and <li> elements to build file paths.
+func parseFileList(s *goquery.Selection, currentPath string, fileList *[]indexers.File) {
+	s.ChildrenFiltered("li").Each(func(i int, li *goquery.Selection) {
+		// Check if it's a folder (has an <a> tag with class="folder")
+		folderLink := li.ChildrenFiltered("a.folder")
+		if folderLink.Length() > 0 {
+			folderName := strings.TrimSpace(folderLink.Text())
+
+			newPath := currentPath
+			if folderName != "" { // Only append if it's a non-empty folder name
+				newPath = filepath.Join(currentPath, folderName)
+			}
+
+			// Recursively parse the nested <ul>
+			nestedUl := li.ChildrenFiltered("ul")
+			if nestedUl.Length() > 0 {
+				parseFileList(nestedUl, newPath, fileList)
+			}
+		} else {
+			// It's a file (has an <i> tag with class="fa-file")
+			fileIcon := li.Find("i.fa-file")
+			if fileIcon.Length() > 0 {
+				// Get the text directly after the <i> tag (the file name)
+				fileName := strings.TrimSpace(li.Contents().Not("i, span.file-size").Text())
+				// Get the file size
+				fileSize := li.Find("span.file-size").Text()
+				fileSize = strings.Trim(fileSize, "()")
+				size, err := humanSizeToBytes(fileSize)
+				if err != nil {
+					log.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", fileSize)
+				}
+
+				fullPath := filepath.Join(currentPath, fileName)
+
+				*fileList = append(*fileList, indexers.File{
+					Name: fullPath,
+					Size: size,
+				})
+			}
+		}
+	})
 }
 
 // Download the torrent file to given dir or return the magnet link.

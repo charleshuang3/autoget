@@ -33,6 +33,19 @@ func TestDetail(t *testing.T) {
 	assert.Equal(t, uint64(391747993), got.Files[0].Size)
 }
 
+func TestDetailWithComplexFileLists(t *testing.T) {
+	n := NewClient(&Config{UseProxy: true})
+	got, err := n.Detail("1980395", true)
+	require.Nil(t, err)
+
+	assert.Len(t, got.Files, 4)
+	assert.Equal(
+		t,
+		"[tribute]_mcdull_movie_2009_[bd_1920x1080_h265_10bit]/scans/[tribute]_mcdull_movie_2009_cover_[1200dpi_lossless][cf095f5c].jxl",
+		got.Files[0].Name,
+	)
+}
+
 func TestHumanSizeToBytes(t *testing.T) {
 	tests := []struct {
 		name     string
