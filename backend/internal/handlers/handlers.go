@@ -18,7 +18,8 @@ type Service struct {
 
 func NewService(config *config.Config) *Service {
 	s := &Service{
-		config: config,
+		config:   config,
+		indexers: map[string]indexers.IIndexer{},
 	}
 
 	if config.MTeam != nil {
