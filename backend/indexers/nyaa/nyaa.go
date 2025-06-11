@@ -28,8 +28,9 @@ const (
 )
 
 type Config struct {
-	BaseURL  string `yaml:"base_url"`
-	UseProxy bool   `yaml:"use_proxy"`
+	BaseURL    string `yaml:"base_url"`
+	UseProxy   bool   `yaml:"use_proxy"`
+	Downloader string `yaml:"downloader"`
 
 	proxyURL string
 }

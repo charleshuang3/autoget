@@ -35,6 +35,8 @@ type Config struct {
 	BaseURL           string `yaml:"base_url"`
 	APIKey            string `yaml:"api_key"`
 	ExcludeGayContent bool   `yaml:"exclude_gay_content"`
+
+	Downloader string `yaml:"downloader"`
 }
 
 func (c *Config) getBaseURL() string {

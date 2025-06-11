@@ -4,6 +4,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/charleshuang3/autoget/backend/downloaders"
+	"github.com/charleshuang3/autoget/backend/indexers/mteam"
+	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,12 +19,20 @@ proxy_url: "http://localhost:8888"
 mteam:
   base_url: "http://mteam.example.com"
   api_key: "mteam_key"
+  downloader: "transmission"
 nyaa:
   base_url: "http://nyaa.example.com"
   use_proxy: true
+  downloader: "transmission"
 sukebei:
   base_url: "http://sukebei.example.com"
-  use_proxy: true
+  downloader: "transmission"
+downloaders:
+  transmission:
+    transmission:
+      url: "http://localhost:9091"
+      torrents_dir: "/tmp/torrents"
+      download_dir: "/tmp/downloads"
 `
 		tmpFile, err := os.CreateTemp("", "config_with_sukebei_*.yaml")
 		assert.NoError(t, err)
@@ -39,12 +50,18 @@ sukebei:
 		assert.NotNil(t, cfg.MTeam)
 		assert.Equal(t, "http://mteam.example.com", cfg.MTeam.BaseURL)
 		assert.Equal(t, "mteam_key", cfg.MTeam.APIKey)
+		assert.Equal(t, "transmission", cfg.MTeam.Downloader)
 		assert.NotNil(t, cfg.Nyaa)
 		assert.Equal(t, "http://nyaa.example.com", cfg.Nyaa.BaseURL)
 		assert.True(t, cfg.Nyaa.UseProxy)
+		assert.Equal(t, "transmission", cfg.Nyaa.Downloader)
 		assert.NotNil(t, cfg.Sukebei)
 		assert.Equal(t, "http://sukebei.example.com", cfg.Sukebei.BaseURL)
-		assert.True(t, cfg.Sukebei.UseProxy)
+		assert.Equal(t, "transmission", cfg.Sukebei.Downloader)
+		assert.NotNil(t, cfg.Downloaders["transmission"])
+		assert.Equal(t, "http://localhost:9091", cfg.Downloaders["transmission"].Transmission.URL)
+		assert.Equal(t, "/tmp/torrents", cfg.Downloaders["transmission"].Transmission.TorrentsDir)
+		assert.Equal(t, "/tmp/downloads", cfg.Downloaders["transmission"].Transmission.DownloadDir)
 	})
 
 	// Test case 2: Config without Sukebei
@@ -55,9 +72,16 @@ proxy_url: "http://localhost:9999"
 mteam:
   base_url: "http://mteam.example.org"
   api_key: "mteam_key_2"
+  downloader: "transmission"
 nyaa:
   base_url: "http://nyaa.example.org"
-  use_proxy: false
+  downloader: "transmission"
+downloaders:
+  transmission:
+    transmission:
+      url: "http://localhost:9091"
+      torrents_dir: "/tmp/torrents"
+      download_dir: "/tmp/downloads"
 `
 		tmpFile, err := os.CreateTemp("", "config_without_sukebei_*.yaml")
 		assert.NoError(t, err)
@@ -75,9 +99,207 @@ nyaa:
 		assert.NotNil(t, cfg.MTeam)
 		assert.Equal(t, "http://mteam.example.org", cfg.MTeam.BaseURL)
 		assert.Equal(t, "mteam_key_2", cfg.MTeam.APIKey)
+		assert.Equal(t, "transmission", cfg.MTeam.Downloader)
 		assert.NotNil(t, cfg.Nyaa)
 		assert.Equal(t, "http://nyaa.example.org", cfg.Nyaa.BaseURL)
-		assert.False(t, cfg.Nyaa.UseProxy)
+		assert.Equal(t, "transmission", cfg.Nyaa.Downloader)
 		assert.Nil(t, cfg.Sukebei) // Sukebei should be nil
+		assert.NotNil(t, cfg.Downloaders["transmission"])
+		assert.Equal(t, "http://localhost:9091", cfg.Downloaders["transmission"].Transmission.URL)
+		assert.Equal(t, "/tmp/torrents", cfg.Downloaders["transmission"].Transmission.TorrentsDir)
+		assert.Equal(t, "/tmp/downloads", cfg.Downloaders["transmission"].Transmission.DownloadDir)
 	})
+}
+
+func TestConfig_validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  *Config
+		wantErr string
+	}{
+		{
+			name: "Valid config",
+			config: &Config{
+				MTeam: &mteam.Config{
+					APIKey:     "test_key",
+					Downloader: "test_downloader",
+				},
+				Nyaa: &nyaa.Config{
+					Downloader: "test_downloader",
+				},
+				Sukebei: &nyaa.Config{
+					Downloader: "test_downloader",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "",
+		},
+		{
+			name: "MTeam missing API key",
+			config: &Config{
+				MTeam: &mteam.Config{
+					Downloader: "test_downloader",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "m-team API key is required",
+		},
+		{
+			name: "MTeam missing downloader",
+			config: &Config{
+				MTeam: &mteam.Config{
+					APIKey: "test_key",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "m-team downloader is required",
+		},
+		{
+			name: "MTeam unknown downloader",
+			config: &Config{
+				MTeam: &mteam.Config{
+					APIKey:     "test_key",
+					Downloader: "unknown_downloader",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "unknown m-team downloader: unknown_downloader",
+		},
+		{
+			name: "Nyaa missing downloader",
+			config: &Config{
+				Nyaa: &nyaa.Config{},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "nyaa downloader is required",
+		},
+		{
+			name: "Nyaa unknown downloader",
+			config: &Config{
+				Nyaa: &nyaa.Config{
+					Downloader: "unknown_downloader",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "unknown nyaa downloader: unknown_downloader",
+		},
+		{
+			name: "Sukebei missing downloader",
+			config: &Config{
+				Sukebei: &nyaa.Config{},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "sukebei downloader is required",
+		},
+		{
+			name: "Sukebei unknown downloader",
+			config: &Config{
+				Sukebei: &nyaa.Config{
+					Downloader: "unknown_downloader",
+				},
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "unknown sukebei downloader: unknown_downloader",
+		},
+		{
+			name: "Invalid downloader config (missing transmission config)",
+			config: &Config{
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"invalid_downloader": {}, // Missing Transmission config
+				},
+			},
+			wantErr: "invalid downloader config for invalid_downloader: transmission config is required",
+		},
+		{
+			name: "Invalid downloader config (invalid transmission URL)",
+			config: &Config{
+				Downloaders: map[string]*downloaders.DownloaderConfig{
+					"invalid_downloader": {
+						Transmission: &downloaders.TransmissionConfig{
+							URL:         "", // Invalid URL
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "invalid downloader config for invalid_downloader: transmission RPC URL is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.validate()
+			if tt.wantErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
