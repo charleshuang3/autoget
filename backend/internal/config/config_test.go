@@ -16,6 +16,7 @@ func TestReadConfig(t *testing.T) {
 		configContent := `
 port: "8080"
 proxy_url: "http://localhost:8888"
+pg_dsn: dsn
 mteam:
   base_url: "http://mteam.example.com"
   api_key: "mteam_key"
@@ -69,6 +70,7 @@ downloaders:
 		configContent := `
 port: "8081"
 proxy_url: "http://localhost:9999"
+pg_dsn: dsn
 mteam:
   base_url: "http://mteam.example.org"
   api_key: "mteam_key_2"
@@ -120,6 +122,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Valid config",
 			config: &Config{
+				PgDSN: "dsn",
 				MTeam: &mteam.Config{
 					APIKey:     "test_key",
 					Downloader: "test_downloader",
@@ -145,6 +148,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "MTeam missing API key",
 			config: &Config{
+				PgDSN: "dsn",
 				MTeam: &mteam.Config{
 					Downloader: "test_downloader",
 				},
@@ -163,6 +167,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "MTeam missing downloader",
 			config: &Config{
+				PgDSN: "dsn",
 				MTeam: &mteam.Config{
 					APIKey: "test_key",
 				},
@@ -181,6 +186,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "MTeam unknown downloader",
 			config: &Config{
+				PgDSN: "dsn",
 				MTeam: &mteam.Config{
 					APIKey:     "test_key",
 					Downloader: "unknown_downloader",
@@ -200,7 +206,8 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Nyaa missing downloader",
 			config: &Config{
-				Nyaa: &nyaa.Config{},
+				PgDSN: "dsn",
+				Nyaa:  &nyaa.Config{},
 				Downloaders: map[string]*downloaders.DownloaderConfig{
 					"test_downloader": {
 						Transmission: &downloaders.TransmissionConfig{
@@ -216,6 +223,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Nyaa unknown downloader",
 			config: &Config{
+				PgDSN: "dsn",
 				Nyaa: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
@@ -234,6 +242,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Sukebei missing downloader",
 			config: &Config{
+				PgDSN:   "dsn",
 				Sukebei: &nyaa.Config{},
 				Downloaders: map[string]*downloaders.DownloaderConfig{
 					"test_downloader": {
@@ -250,6 +259,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Sukebei unknown downloader",
 			config: &Config{
+				PgDSN: "dsn",
 				Sukebei: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
@@ -268,6 +278,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Invalid downloader config (missing transmission config)",
 			config: &Config{
+				PgDSN: "dsn",
 				Downloaders: map[string]*downloaders.DownloaderConfig{
 					"invalid_downloader": {}, // Missing Transmission config
 				},
@@ -277,6 +288,7 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Invalid downloader config (invalid transmission URL)",
 			config: &Config{
+				PgDSN: "dsn",
 				Downloaders: map[string]*downloaders.DownloaderConfig{
 					"invalid_downloader": {
 						Transmission: &downloaders.TransmissionConfig{

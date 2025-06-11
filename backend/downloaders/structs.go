@@ -2,6 +2,8 @@ package downloaders
 
 import (
 	"fmt"
+
+	"github.com/charleshuang3/autoget/backend/internal/db"
 )
 
 type TransmissionConfig struct {
@@ -28,13 +30,16 @@ func (c *TransmissionConfig) Validate() error {
 // SeedingPolicy we use at least X MB uploaded in last Y days as
 // a condition to continue seeding.
 type SeedingPolicy struct {
-	IntervalInDays    uint64 `yaml:"interval_in_days"`
-	UploadAtLeastInMB uint64 `yaml:"upload_at_least_in_mb"`
+	IntervalInDays    int   `yaml:"interval_in_days"`
+	UploadAtLeastInMB int64 `yaml:"upload_at_least_in_mb"`
 }
 
 func (p *SeedingPolicy) Validate() error {
 	if p.IntervalInDays == 0 {
 		return fmt.Errorf("interval in days is required")
+	}
+	if p.IntervalInDays > db.StoreMaxDays {
+		return fmt.Errorf("interval in days should be less than 30")
 	}
 	if p.UploadAtLeastInMB == 0 {
 		return fmt.Errorf("upload at least in MB is required")

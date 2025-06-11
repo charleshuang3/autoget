@@ -13,6 +13,7 @@ import (
 type Config struct {
 	Port     string `yaml:"port"`
 	ProxyURL string `yaml:"proxy_url"`
+	PgDSN    string `yaml:"pg_dsn"`
 
 	MTeam   *mteam.Config `yaml:"mteam"`
 	Nyaa    *nyaa.Config  `yaml:"nyaa"`
@@ -45,6 +46,10 @@ func ReadConfig(path string) (*Config, error) {
 }
 
 func (c *Config) validate() error {
+	if c.PgDSN == "" {
+		return fmt.Errorf("postgres DSN is required")
+	}
+
 	if c.MTeam != nil {
 		if c.MTeam.APIKey == "" {
 			return fmt.Errorf("m-team API key is required")
