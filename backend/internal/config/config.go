@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charleshuang3/autoget/backend/downloaders"
+	dlconfig "github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"gopkg.in/yaml.v3"
@@ -19,7 +19,7 @@ type Config struct {
 	Nyaa    *nyaa.Config  `yaml:"nyaa"`
 	Sukebei *nyaa.Config  `yaml:"sukebei"`
 
-	Downloaders map[string]*downloaders.DownloaderConfig `yaml:"downloaders"`
+	Downloaders map[string]*dlconfig.DownloaderConfig `yaml:"downloaders"`
 }
 
 func ReadConfig(path string) (*Config, error) {

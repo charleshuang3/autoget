@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/charleshuang3/autoget/backend/downloaders"
+	dlconfig "github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/stretchr/testify/assert"
@@ -133,9 +133,9 @@ func TestConfig_validate(t *testing.T) {
 				Sukebei: &nyaa.Config{
 					Downloader: "test_downloader",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -152,9 +152,9 @@ func TestConfig_validate(t *testing.T) {
 				MTeam: &mteam.Config{
 					Downloader: "test_downloader",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -171,9 +171,9 @@ func TestConfig_validate(t *testing.T) {
 				MTeam: &mteam.Config{
 					APIKey: "test_key",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -191,9 +191,9 @@ func TestConfig_validate(t *testing.T) {
 					APIKey:     "test_key",
 					Downloader: "unknown_downloader",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -208,9 +208,9 @@ func TestConfig_validate(t *testing.T) {
 			config: &Config{
 				PgDSN: "dsn",
 				Nyaa:  &nyaa.Config{},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -227,9 +227,9 @@ func TestConfig_validate(t *testing.T) {
 				Nyaa: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -244,9 +244,9 @@ func TestConfig_validate(t *testing.T) {
 			config: &Config{
 				PgDSN:   "dsn",
 				Sukebei: &nyaa.Config{},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -263,9 +263,9 @@ func TestConfig_validate(t *testing.T) {
 				Sukebei: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
@@ -279,7 +279,7 @@ func TestConfig_validate(t *testing.T) {
 			name: "Invalid downloader config (missing transmission config)",
 			config: &Config{
 				PgDSN: "dsn",
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"invalid_downloader": {}, // Missing Transmission config
 				},
 			},
@@ -289,9 +289,9 @@ func TestConfig_validate(t *testing.T) {
 			name: "Invalid downloader config (invalid transmission URL)",
 			config: &Config{
 				PgDSN: "dsn",
-				Downloaders: map[string]*downloaders.DownloaderConfig{
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"invalid_downloader": {
-						Transmission: &downloaders.TransmissionConfig{
+						Transmission: &dlconfig.TransmissionConfig{
 							URL:         "", // Invalid URL
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",

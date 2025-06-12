@@ -3,23 +3,27 @@ package handlers
 import (
 	"slices"
 
+	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Service struct {
 	config *config.Config
 
-	indexers map[string]indexers.IIndexer
+	indexers    map[string]indexers.IIndexer
+	downloaders map[string]downloaders.IDownloader
 }
 
-func NewService(config *config.Config) *Service {
+func NewService(config *config.Config, db *gorm.DB, downloaders map[string]downloaders.IDownloader) *Service {
 	s := &Service{
-		config:   config,
-		indexers: map[string]indexers.IIndexer{},
+		config:      config,
+		indexers:    map[string]indexers.IIndexer{},
+		downloaders: downloaders,
 	}
 
 	if config.MTeam != nil {
@@ -41,6 +45,8 @@ func (s *Service) SetupRouter(router *gin.RouterGroup) {
 	router.GET("/indexers/:indexer/resources", s.indexerListResources)
 	router.GET("/indexers/:indexer/resources/:resource", s.indexerResourceDetail)
 	router.GET("/indexers/:indexer/resources/:resource/download", s.indexerDownload)
+
+	router.GET("/downloaders", s.listDownloaders)
 }
 
 func (s *Service) listIndexers(c *gin.Context) {
@@ -130,4 +136,24 @@ func (s *Service) indexerResourceDetail(c *gin.Context) {
 
 func (s *Service) indexerDownload(c *gin.Context) {
 	// TODO
+}
+
+type listDownloadersRespItem struct {
+	TorrentsDir string `json:"torrents_dir"`
+	DownloadDir string `json:"download_dir"`
+}
+
+type listDownloadersResp struct {
+	Map map[string]listDownloadersRespItem `json:"downloaders"`
+}
+
+func (s *Service) listDownloaders(c *gin.Context) {
+	m := map[string]listDownloadersRespItem{}
+	for name, dl := range s.downloaders {
+		m[name] = listDownloadersRespItem{
+			TorrentsDir: dl.TorrentsDir(),
+			DownloadDir: dl.DownloadDir(),
+		}
+	}
+	c.JSON(200, listDownloadersResp{Map: m})
 }

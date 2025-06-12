@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/charleshuang3/autoget/backend/downloaders"
+	"github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/robfig/cron/v3"
@@ -25,10 +25,10 @@ type Client struct {
 	client *transmissionrpc.Client
 	name   string
 	db     *gorm.DB
-	cfg    *downloaders.DownloaderConfig
+	cfg    *config.DownloaderConfig
 }
 
-func New(name string, cfg *downloaders.DownloaderConfig, db *gorm.DB) (*Client, error) {
+func New(name string, cfg *config.DownloaderConfig, db *gorm.DB) (*Client, error) {
 	u, err := url.Parse(cfg.Transmission.URL)
 	if err != nil {
 		return nil, err

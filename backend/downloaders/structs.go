@@ -3,66 +3,22 @@ package downloaders
 import (
 	"fmt"
 
-	"github.com/charleshuang3/autoget/backend/internal/db"
+	"github.com/charleshuang3/autoget/backend/downloaders/config"
+	"github.com/charleshuang3/autoget/backend/downloaders/transmission"
+	"github.com/robfig/cron/v3"
+	"gorm.io/gorm"
 )
 
-type TransmissionConfig struct {
-	URL         string `yaml:"url"`
-	TorrentsDir string `yaml:"torrents_dir"`
-	DownloadDir string `yaml:"download_dir"`
-	Username    string `yaml:"username"`
-	Password    string `yaml:"password"`
+type IDownloader interface {
+	RegisterDailySeedingChecker(cron *cron.Cron)
+	TorrentsDir() string
+	DownloadDir() string
 }
 
-func (c *TransmissionConfig) Validate() error {
-	if c.URL == "" {
-		return fmt.Errorf("transmission RPC URL is required")
+func New(name string, cfg *config.DownloaderConfig, db *gorm.DB) (IDownloader, error) {
+	if cfg.Transmission == nil {
+		return nil, fmt.Errorf("Unknown downloader %s", name)
 	}
-	if c.TorrentsDir == "" {
-		return fmt.Errorf("torrents directory is required")
-	}
-	if c.DownloadDir == "" {
-		return fmt.Errorf("download directory is required")
-	}
-	return nil
-}
 
-// SeedingPolicy we use at least X MB uploaded in last Y days as
-// a condition to continue seeding.
-type SeedingPolicy struct {
-	IntervalInDays    int   `yaml:"interval_in_days"`
-	UploadAtLeastInMB int64 `yaml:"upload_at_least_in_mb"`
-}
-
-func (p *SeedingPolicy) Validate() error {
-	if p.IntervalInDays == 0 {
-		return fmt.Errorf("interval in days is required")
-	}
-	if p.IntervalInDays > db.StoreMaxDays {
-		return fmt.Errorf("interval in days should be less than 30")
-	}
-	if p.UploadAtLeastInMB == 0 {
-		return fmt.Errorf("upload at least in MB is required")
-	}
-	return nil
-}
-
-type DownloaderConfig struct {
-	Transmission  *TransmissionConfig `yaml:"transmission"`
-	SeedingPolicy *SeedingPolicy      `yaml:"seeding_policy"`
-}
-
-func (c *DownloaderConfig) Validate() error {
-	if c.Transmission == nil {
-		return fmt.Errorf("transmission config is required")
-	}
-	if err := c.Transmission.Validate(); err != nil {
-		return err
-	}
-	if c.SeedingPolicy != nil {
-		if err := c.SeedingPolicy.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return transmission.New(name, cfg, db)
 }

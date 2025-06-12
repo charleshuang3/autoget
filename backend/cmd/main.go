@@ -9,9 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/internal/config"
+	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/handlers"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +31,25 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to read config")
 	}
 
-	service := handlers.NewService(cfg)
+	db, err := db.Pg(cfg.PgDSN)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to connect to database")
+	}
+
+	cronjob := cron.New()
+	cronjob.Start()
+
+	downloaderMap := map[string]downloaders.IDownloader{}
+	for name, dlCfg := range cfg.Downloaders {
+		downloader, err := downloaders.New(name, dlCfg, db)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to create downloader")
+		}
+		downloaderMap[name] = downloader
+		downloader.RegisterDailySeedingChecker(cronjob)
+	}
+
+	service := handlers.NewService(cfg, db, downloaderMap)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()

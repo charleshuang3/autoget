@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charleshuang3/autoget/backend/downloaders"
+	"github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/stretchr/testify/assert"
@@ -81,11 +81,11 @@ func TestCheckDailySeeding(t *testing.T) {
 	d, err := db.SqliteForTest()
 	require.NoError(t, err)
 
-	conf := &downloaders.DownloaderConfig{
-		Transmission: &downloaders.TransmissionConfig{
+	conf := &config.DownloaderConfig{
+		Transmission: &config.TransmissionConfig{
 			URL: serv.URL,
 		},
-		SeedingPolicy: &downloaders.SeedingPolicy{
+		SeedingPolicy: &config.SeedingPolicy{
 			IntervalInDays:    3,
 			UploadAtLeastInMB: 1,
 		},

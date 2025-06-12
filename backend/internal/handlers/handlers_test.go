@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +47,23 @@ func (i *indexerMock) Download(id, dir string) (*indexers.DownloadResult, *error
 	return i.mockDownloadResult, i.mockDownloadErr
 }
 
+type downloadersMock struct {
+	mockTorrentsDir string
+	mockDownloadDir string
+}
+
+func (d *downloadersMock) TorrentsDir() string {
+	return d.mockTorrentsDir
+}
+
+func (d *downloadersMock) DownloadDir() string {
+	return d.mockDownloadDir
+}
+
+func (d *downloadersMock) RegisterDailySeedingChecker(cron *cron.Cron) {
+
+}
+
 func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock) {
 	t.Helper()
 
@@ -57,6 +76,12 @@ func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock) {
 	serv := &Service{
 		indexers: map[string]indexers.IIndexer{
 			"mock": m,
+		},
+		downloaders: map[string]downloaders.IDownloader{
+			"mock": &downloadersMock{
+				mockTorrentsDir: "/torrents",
+				mockDownloadDir: "/downloads",
+			},
 		},
 	}
 
@@ -78,7 +103,7 @@ func TestService_indexerCategories(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		req, _ := http.NewRequest("GET", "/indexers/mock/categories", nil)
+		req := httptest.NewRequest("GET", "/indexers/mock/categories", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -123,7 +148,7 @@ func TestService_indexerCategories(t *testing.T) {
 
 				w := httptest.NewRecorder()
 
-				req, _ := http.NewRequest("GET", "/indexers/"+tt.indexerName+"/categories", nil)
+				req := httptest.NewRequest("GET", "/indexers/"+tt.indexerName+"/categories", nil)
 				router.ServeHTTP(w, req)
 
 				assert.Equal(t, tt.expectedCode, w.Code)
@@ -143,7 +168,7 @@ func TestService_listIndexers(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		req, _ := http.NewRequest("GET", "/indexers", nil)
+		req := httptest.NewRequest("GET", "/indexers", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -171,7 +196,7 @@ func TestService_indexerResourceDetail(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		req, _ := http.NewRequest("GET", "/indexers/mock/resources/res-detail-1", nil)
+		req := httptest.NewRequest("GET", "/indexers/mock/resources/res-detail-1", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -218,7 +243,7 @@ func TestService_indexerResourceDetail(t *testing.T) {
 
 				w := httptest.NewRecorder()
 
-				req, _ := http.NewRequest("GET", "/indexers/"+tt.indexerName+"/resources/"+tt.resourceID, nil)
+				req := httptest.NewRequest("GET", "/indexers/"+tt.indexerName+"/resources/"+tt.resourceID, nil)
 				router.ServeHTTP(w, req)
 
 				assert.Equal(t, tt.expectedCode, w.Code)
@@ -249,7 +274,7 @@ func TestService_indexerListResources(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		req, _ := http.NewRequest("GET", "/indexers/mock/resources?category=test&keyword=foo", nil)
+		req := httptest.NewRequest("GET", "/indexers/mock/resources?category=test&keyword=foo", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -305,7 +330,7 @@ func TestService_indexerListResources(t *testing.T) {
 
 				w := httptest.NewRecorder()
 
-				req, _ := http.NewRequest("GET", "/indexers/"+tt.indexerName+"/resources?"+tt.queryParams, nil)
+				req := httptest.NewRequest("GET", "/indexers/"+tt.indexerName+"/resources?"+tt.queryParams, nil)
 				router.ServeHTTP(w, req)
 
 				assert.Equal(t, tt.expectedCode, w.Code)
@@ -316,4 +341,21 @@ func TestService_indexerListResources(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestListDownloaders(t *testing.T) {
+	_, router, _ := testSetup(t)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/downloaders", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	resp := &listDownloadersResp{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), resp))
+
+	assert.Len(t, resp.Map, 1)
+	assert.Equal(t, "/torrents", resp.Map["mock"].TorrentsDir)
+	assert.Equal(t, "/downloads", resp.Map["mock"].DownloadDir)
 }
