@@ -43,7 +43,10 @@ func (i *indexerMock) Detail(id string, fileList bool) (*indexers.ResourceDetail
 	return i.mockDetailResult, i.mockDetailErr
 }
 
-func (i *indexerMock) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
+func (i *indexerMock) SetTorrentsDir(dir string) {
+}
+
+func (i *indexerMock) Download(id string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
 	return i.mockDownloadResult, i.mockDownloadErr
 }
 

@@ -68,7 +68,8 @@ func TestList(t *testing.T) {
 func TestDownload(t *testing.T) {
 	n := NewClient(&nyaa.Config{UseProxy: true}, nil)
 	dir := t.TempDir()
-	got, err := n.Download("4322631", dir)
+	n.SetTorrentsDir(dir)
+	got, err := n.Download("4322631")
 	require.Nil(t, err)
 	assert.NotEmpty(t, got.TorrentFilePath)
 	assert.FileExists(t, got.TorrentFilePath)

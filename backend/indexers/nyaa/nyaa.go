@@ -57,6 +57,8 @@ type Client struct {
 	DefaultBaseURL string
 	CategoriesMap  map[string]indexers.Category
 	CategoriesList []indexers.Category
+
+	torrentsDir string
 }
 
 func (c *Client) getBaseURL() string {
@@ -100,6 +102,10 @@ func (c *Client) Name() string {
 // Categories returns indexer's resource categories.
 func (c *Client) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return c.CategoriesList, nil
+}
+
+func (c *Client) SetTorrentsDir(dir string) {
+	c.torrentsDir = dir
 }
 
 // List resources in given category and keyword (optional).
@@ -363,7 +369,7 @@ func parseFileList(s *goquery.Selection, currentPath string, fileList *[]indexer
 }
 
 // Download the torrent file to given dir or return the magnet link.
-func (c *Client) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
+func (c *Client) Download(id string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
 	fileName := fmt.Sprintf("%s.torrent", id)
 
 	url, err := url.JoinPath(c.getBaseURL(), "download", fileName)
@@ -371,13 +377,13 @@ func (c *Client) Download(id, dir string) (*indexers.DownloadResult, *errors.HTT
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
-	err = helpers.DownloadFileFromURL(c.httpClient, url, filepath.Join(dir, fileName))
+	err = helpers.DownloadFileFromURL(c.httpClient, url, filepath.Join(c.torrentsDir, fileName))
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
 	}
 
 	return &indexers.DownloadResult{
-		TorrentFilePath: filepath.Join(dir, fileName),
+		TorrentFilePath: filepath.Join(c.torrentsDir, fileName),
 	}, nil
 }
 

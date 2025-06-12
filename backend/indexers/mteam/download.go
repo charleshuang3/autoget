@@ -17,7 +17,7 @@ type genDownloadLinkResponse struct {
 	Data    string      `json:"data"`
 }
 
-func (m *MTeam) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
+func (m *MTeam) Download(id string) (*indexers.DownloadResult, *errors.HTTPStatusError) {
 	_, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusBadRequest, "invalid id")
@@ -36,7 +36,7 @@ func (m *MTeam) Download(id, dir string) (*indexers.DownloadResult, *errors.HTTP
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 
-	destFilePath := filepath.Join(dir, name+"."+id+".torrent")
+	destFilePath := filepath.Join(m.torrentsDir, name+"."+id+".torrent")
 
 	err = helpers.DownloadFileFromURL(http.DefaultClient, resp.Data, destFilePath)
 	if err != nil {

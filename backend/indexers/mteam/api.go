@@ -56,6 +56,8 @@ type MTeam struct {
 
 	prefetched *prefetcheddata.Data
 	standards  map[string]string
+
+	torrentsDir string
 }
 
 func NewMTeam(config *Config, db *gorm.DB) *MTeam {
@@ -84,4 +86,8 @@ func NewMTeam(config *Config, db *gorm.DB) *MTeam {
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return m.prefetched.Categories.Tree, nil
+}
+
+func (m *MTeam) SetTorrentsDir(dir string) {
+	m.torrentsDir = dir
 }

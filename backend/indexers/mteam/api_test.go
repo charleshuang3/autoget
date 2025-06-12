@@ -164,7 +164,8 @@ func TestDownload(t *testing.T) {
 	require.NotNil(t, m)
 
 	dir := t.TempDir()
-	res, err := m.Download("947796", dir)
+	m.SetTorrentsDir(dir)
+	res, err := m.Download("947796")
 	require.Nil(t, err)
 
 	assert.NotEmpty(t, res.TorrentFilePath)

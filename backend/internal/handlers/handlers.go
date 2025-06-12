@@ -28,13 +28,22 @@ func NewService(config *config.Config, db *gorm.DB, cron *cron.Cron, downloaders
 	}
 
 	if config.MTeam != nil {
-		s.indexers["m-team"] = mteam.NewMTeam(config.MTeam, db)
+		i := mteam.NewMTeam(config.MTeam, db)
+		i.SetTorrentsDir(downloaders[config.MTeam.Downloader].TorrentsDir())
+		i.RegisterRSSCronjob(cron)
+		s.indexers["m-team"] = i
 	}
 	if config.Nyaa != nil {
-		s.indexers["nyaa"] = nyaa.NewClient(config.Nyaa, db)
+		i := nyaa.NewClient(config.Nyaa, db)
+		i.SetTorrentsDir(downloaders[config.Nyaa.Downloader].TorrentsDir())
+		i.RegisterRSSCronjob(cron)
+		s.indexers["nyaa"] = i
 	}
 	if config.Sukebei != nil {
-		s.indexers["sukebei"] = nyaa.NewClient(config.Sukebei, db)
+		i := nyaa.NewClient(config.Sukebei, db)
+		i.SetTorrentsDir(downloaders[config.Sukebei.Downloader].TorrentsDir())
+		i.RegisterRSSCronjob(cron)
+		s.indexers["sukebei"] = i
 	}
 
 	return s
