@@ -89,7 +89,7 @@ func TestSeedingStatus_CleanupHistory(t *testing.T) {
 
 	// Add entries within storeMaxDays
 	recentDate1 := now.AddDate(0, 0, -5).Format("2006-01-02")
-	recentDate2 := now.AddDate(0, 0, -(StoreMaxDays - 1)).Format("2006-01-02")
+	recentDate2 := now.AddDate(0, 0, -(StoreMaxDays - 2)).Format("2006-01-02")
 	s.UploadHistories[recentDate1] = 300
 	s.UploadHistories[recentDate2] = 400
 
