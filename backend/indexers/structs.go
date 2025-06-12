@@ -22,7 +22,7 @@ type IIndexer interface {
 	Download(id, dir string) (*DownloadResult, *errors.HTTPStatusError)
 
 	// RegisterSearchForRSS
-	RegisterSearchForRSS(s *RSSSearch)
+	RegisterSearchForRSS(s *RSSSearch) *errors.HTTPStatusError
 
 	// RegisterRSSCronjob
 	RegisterRSSCronjob(cron *cron.Cron)

@@ -47,8 +47,8 @@ func (i *indexerMock) Download(id, dir string) (*indexers.DownloadResult, *error
 	return i.mockDownloadResult, i.mockDownloadErr
 }
 
-func (i *indexerMock) RegisterSearchForRSS(s *indexers.RSSSearch) {
-
+func (i *indexerMock) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusError {
+	return nil
 }
 
 func (i *indexerMock) RegisterRSSCronjob(cron *cron.Cron) {
