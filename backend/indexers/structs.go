@@ -2,6 +2,7 @@ package indexers
 
 import (
 	"github.com/charleshuang3/autoget/backend/internal/errors"
+	"github.com/robfig/cron/v3"
 )
 
 type IIndexer interface {
@@ -19,6 +20,12 @@ type IIndexer interface {
 
 	// Download the torrent file to given dir or return the magnet link.
 	Download(id, dir string) (*DownloadResult, *errors.HTTPStatusError)
+
+	// RegisterSearchForRSS
+	RegisterSearchForRSS(s *RSSSearch)
+
+	// RegisterRSSCronjob
+	RegisterRSSCronjob(cron *cron.Cron)
 }
 
 type IndexerBasicInfo struct {
@@ -110,4 +117,14 @@ type ListRequest struct {
 	PageSize  uint32
 	Free      bool
 	Standards []string // See Resolution* for options
+}
+
+const (
+	ActionDownload     string = "download"
+	ActionNotification string = "notification"
+)
+
+type RSSSearch struct {
+	Text   string `json:"text"`
+	Action string `json:"action"`
 }

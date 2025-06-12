@@ -9,7 +9,7 @@ import (
 )
 
 func TestCategories(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true})
+	n := NewClient(&Config{UseProxy: true}, nil)
 	got, err := n.Categories()
 	require.Nil(t, err)
 	assert.NotEmpty(t, got)
@@ -17,7 +17,7 @@ func TestCategories(t *testing.T) {
 }
 
 func TestDetail(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true})
+	n := NewClient(&Config{UseProxy: true}, nil)
 	got, err := n.Detail("1980585", true)
 	require.Nil(t, err)
 
@@ -34,7 +34,7 @@ func TestDetail(t *testing.T) {
 }
 
 func TestDetailWithComplexFileLists(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true})
+	n := NewClient(&Config{UseProxy: true}, nil)
 	got, err := n.Detail("1980395", true)
 	require.Nil(t, err)
 
@@ -99,7 +99,7 @@ func TestHumanSizeToBytes(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true})
+	n := NewClient(&Config{UseProxy: true}, nil)
 
 	tests := []struct {
 		name     string
@@ -147,7 +147,7 @@ func TestList(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true})
+	n := NewClient(&Config{UseProxy: true}, nil)
 	dir := t.TempDir()
 	got, err := n.Download("1980585", dir)
 	require.Nil(t, err)

@@ -16,10 +16,13 @@ import (
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/helpers"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 var (
 	_ indexers.IIndexer = (*Client)(nil)
+
+	logger = log.With().Str("indexer", "nyaa").Logger()
 )
 
 const (
@@ -48,6 +51,7 @@ func (c *Config) getProxyURL() string {
 
 type Client struct {
 	config     *Config
+	db         *gorm.DB
 	httpClient *http.Client
 
 	DefaultBaseURL string
@@ -62,9 +66,10 @@ func (c *Client) getBaseURL() string {
 	return c.config.BaseURL
 }
 
-func NewClient(config *Config) *Client {
+func NewClient(config *Config, db *gorm.DB) *Client {
 	c := &Client{
 		config:         config,
+		db:             db,
 		httpClient:     http.DefaultClient,
 		DefaultBaseURL: defaultBaseURL,
 		CategoriesMap:  prefetcheddata.Categories,
@@ -76,7 +81,7 @@ func NewClient(config *Config) *Client {
 		if proxyURL != "" {
 			proxy, err := url.Parse(proxyURL)
 			if err != nil {
-				log.Fatal().Err(err).Msg("failed to parse proxy URL")
+				logger.Fatal().Err(err).Msg("failed to parse proxy URL")
 			}
 			c.httpClient.Transport = &http.Transport{
 				Proxy: http.ProxyURL(proxy),
@@ -269,7 +274,7 @@ func (c *Client) Detail(id string, fileList bool) (*indexers.ResourceDetail, *er
 				sizeStr := s.Text()
 				detail.Size, err = humanSizeToBytes(sizeStr)
 				if err != nil {
-					log.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", sizeStr)
+					logger.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", sizeStr)
 				}
 			}
 		case "Seeders:":
@@ -343,7 +348,7 @@ func parseFileList(s *goquery.Selection, currentPath string, fileList *[]indexer
 				fileSize = strings.Trim(fileSize, "()")
 				size, err := humanSizeToBytes(fileSize)
 				if err != nil {
-					log.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", fileSize)
+					logger.Info().Err(err).Msgf("humanSizeToBytes() invalid size string: %s", fileSize)
 				}
 
 				fullPath := filepath.Join(currentPath, fileName)

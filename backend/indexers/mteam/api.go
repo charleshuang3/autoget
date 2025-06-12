@@ -9,6 +9,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 var (
@@ -35,6 +36,7 @@ type Config struct {
 	BaseURL           string `yaml:"base_url"`
 	APIKey            string `yaml:"api_key"`
 	ExcludeGayContent bool   `yaml:"exclude_gay_content"`
+	RSS               string `yaml:"rss"`
 
 	Downloader string `yaml:"downloader"`
 }
@@ -50,18 +52,20 @@ type MTeam struct {
 	indexers.IndexerBasicInfo
 
 	config *Config
+	db     *gorm.DB
 
 	prefetched *prefetcheddata.Data
 	standards  map[string]string
 }
 
-func NewMTeam(config *Config) *MTeam {
+func NewMTeam(config *Config, db *gorm.DB) *MTeam {
 	if config.APIKey == "" {
 		return nil
 	}
 	m := &MTeam{
 		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(name, true),
 		config:           config,
+		db:               db,
 		standards:        map[string]string{},
 	}
 

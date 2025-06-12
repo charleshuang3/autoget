@@ -23,7 +23,7 @@ func TestCategories(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	})
+	}, nil)
 	require.NotNil(t, m)
 
 	got, err := m.Categories()
@@ -38,7 +38,7 @@ func TestList(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	})
+	}, nil)
 	require.NotNil(t, m)
 
 	tests := []struct {
@@ -145,7 +145,7 @@ func TestDetail(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	})
+	}, nil)
 	require.NotNil(t, m)
 
 	res, err := m.Detail("947796", true)
@@ -160,7 +160,7 @@ func TestDownload(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	})
+	}, nil)
 	require.NotNil(t, m)
 
 	dir := t.TempDir()

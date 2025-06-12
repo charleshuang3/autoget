@@ -9,6 +9,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +20,7 @@ type Service struct {
 	downloaders map[string]downloaders.IDownloader
 }
 
-func NewService(config *config.Config, db *gorm.DB, downloaders map[string]downloaders.IDownloader) *Service {
+func NewService(config *config.Config, db *gorm.DB, cron *cron.Cron, downloaders map[string]downloaders.IDownloader) *Service {
 	s := &Service{
 		config:      config,
 		indexers:    map[string]indexers.IIndexer{},
@@ -27,13 +28,13 @@ func NewService(config *config.Config, db *gorm.DB, downloaders map[string]downl
 	}
 
 	if config.MTeam != nil {
-		s.indexers["m-team"] = mteam.NewMTeam(config.MTeam)
+		s.indexers["m-team"] = mteam.NewMTeam(config.MTeam, db)
 	}
 	if config.Nyaa != nil {
-		s.indexers["nyaa"] = nyaa.NewClient(config.Nyaa)
+		s.indexers["nyaa"] = nyaa.NewClient(config.Nyaa, db)
 	}
 	if config.Sukebei != nil {
-		s.indexers["sukebei"] = nyaa.NewClient(config.Sukebei)
+		s.indexers["sukebei"] = nyaa.NewClient(config.Sukebei, db)
 	}
 
 	return s

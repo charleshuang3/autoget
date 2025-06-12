@@ -49,7 +49,7 @@ func main() {
 		downloader.RegisterDailySeedingChecker(cronjob)
 	}
 
-	service := handlers.NewService(cfg, db, downloaderMap)
+	service := handlers.NewService(cfg, db, cronjob, downloaderMap)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()

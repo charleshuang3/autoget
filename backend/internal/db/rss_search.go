@@ -1,21 +1,30 @@
 package db
 
-import "gorm.io/gorm"
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 type RSSSearch struct {
 	gorm.Model
 	Indexer string `gorm:"indexer,index"`
 	Text    string `gorm:"text"`
 	Action  string `gorm:"action"`
-	URL     string `gorm:"url"`
+
+	// founded
+	ResID     string `gorm:"res_id"`
+	Title     string `gorm:"title"`
+	Catergory string `gorm:"category"`
+	URL       string `gorm:"url"`
 }
 
 func (s *RSSSearch) TableName() string {
 	return "rss_search"
 }
 
-func GetSearchsByIndexer(db *gorm.DB, indexer string) ([]RSSSearch, error) {
-	var searchs []RSSSearch
+func GetSearchsByIndexer(db *gorm.DB, indexer string) ([]*RSSSearch, error) {
+	var searchs []*RSSSearch
 	err := db.Where("indexer = ?", indexer).Find(&searchs).Error
 	if err != nil {
 		return nil, err
@@ -24,7 +33,12 @@ func GetSearchsByIndexer(db *gorm.DB, indexer string) ([]RSSSearch, error) {
 }
 
 func AddSearch(db *gorm.DB, search *RSSSearch) error {
+	search.Text = strings.ToLower(search.Text)
 	return db.Create(search).Error
+}
+
+func UpdateSearch(db *gorm.DB, search *RSSSearch) error {
+	return db.Save(search).Error
 }
 
 func DeleteSearch(db *gorm.DB, id uint) error {
