@@ -7,6 +7,7 @@ import (
 	dlconfig "github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
+	"github.com/charleshuang3/autoget/backend/internal/notify/telegram"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,6 +18,9 @@ func TestReadConfig(t *testing.T) {
 port: "8080"
 proxy_url: "http://localhost:8888"
 pg_dsn: dsn
+telegram:
+  token: "telegram_token"
+  chat_id: "telegram_chat_id"
 mteam:
   base_url: "http://mteam.example.com"
   api_key: "mteam_key"
@@ -48,6 +52,9 @@ downloaders:
 
 		assert.Equal(t, "8080", cfg.Port)
 		assert.Equal(t, "http://localhost:8888", cfg.ProxyURL)
+		assert.NotNil(t, cfg.Telegram)
+		assert.Equal(t, "telegram_token", cfg.Telegram.Token)
+		assert.Equal(t, "telegram_chat_id", cfg.Telegram.ChatID)
 		assert.NotNil(t, cfg.MTeam)
 		assert.Equal(t, "http://mteam.example.com", cfg.MTeam.BaseURL)
 		assert.Equal(t, "mteam_key", cfg.MTeam.APIKey)
@@ -71,6 +78,9 @@ downloaders:
 port: "8081"
 proxy_url: "http://localhost:9999"
 pg_dsn: dsn
+telegram:
+  token: "telegram_token_2"
+  chat_id: "telegram_chat_id_2"
 mteam:
   base_url: "http://mteam.example.org"
   api_key: "mteam_key_2"
@@ -98,6 +108,9 @@ downloaders:
 
 		assert.Equal(t, "8081", cfg.Port)
 		assert.Equal(t, "http://localhost:9999", cfg.ProxyURL)
+		assert.NotNil(t, cfg.Telegram)
+		assert.Equal(t, "telegram_token_2", cfg.Telegram.Token)
+		assert.Equal(t, "telegram_chat_id_2", cfg.Telegram.ChatID)
 		assert.NotNil(t, cfg.MTeam)
 		assert.Equal(t, "http://mteam.example.org", cfg.MTeam.BaseURL)
 		assert.Equal(t, "mteam_key_2", cfg.MTeam.APIKey)
@@ -123,6 +136,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "Valid config",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				MTeam: &mteam.Config{
 					APIKey:     "test_key",
 					Downloader: "test_downloader",
@@ -146,9 +163,79 @@ func TestConfig_validate(t *testing.T) {
 			wantErr: "",
 		},
 		{
+			name: "Missing Telegram config",
+			config: &Config{
+				PgDSN: "dsn",
+				MTeam: &mteam.Config{
+					APIKey:     "test_key",
+					Downloader: "test_downloader",
+				},
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &dlconfig.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "telegram config is required",
+		},
+		{
+			name: "Telegram missing token",
+			config: &Config{
+				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					ChatID: "test_chat_id",
+				},
+				MTeam: &mteam.Config{
+					APIKey:     "test_key",
+					Downloader: "test_downloader",
+				},
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &dlconfig.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "telegram token is required",
+		},
+		{
+			name: "Telegram missing chat ID",
+			config: &Config{
+				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token: "test_token",
+				},
+				MTeam: &mteam.Config{
+					APIKey:     "test_key",
+					Downloader: "test_downloader",
+				},
+				Downloaders: map[string]*dlconfig.DownloaderConfig{
+					"test_downloader": {
+						Transmission: &dlconfig.TransmissionConfig{
+							URL:         "http://localhost:9091",
+							TorrentsDir: "/tmp/torrents",
+							DownloadDir: "/tmp/downloads",
+						},
+					},
+				},
+			},
+			wantErr: "telegram chat ID is required",
+		},
+		{
 			name: "MTeam missing API key",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				MTeam: &mteam.Config{
 					Downloader: "test_downloader",
 				},
@@ -168,6 +255,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "MTeam missing downloader",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				MTeam: &mteam.Config{
 					APIKey: "test_key",
 				},
@@ -187,6 +278,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "MTeam unknown downloader",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				MTeam: &mteam.Config{
 					APIKey:     "test_key",
 					Downloader: "unknown_downloader",
@@ -207,7 +302,11 @@ func TestConfig_validate(t *testing.T) {
 			name: "Nyaa missing downloader",
 			config: &Config{
 				PgDSN: "dsn",
-				Nyaa:  &nyaa.Config{},
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
+				Nyaa: &nyaa.Config{},
 				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
 						Transmission: &dlconfig.TransmissionConfig{
@@ -224,6 +323,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "Nyaa unknown downloader",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				Nyaa: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
@@ -242,7 +345,11 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "Sukebei missing downloader",
 			config: &Config{
-				PgDSN:   "dsn",
+				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				Sukebei: &nyaa.Config{},
 				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"test_downloader": {
@@ -260,6 +367,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "Sukebei unknown downloader",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				Sukebei: &nyaa.Config{
 					Downloader: "unknown_downloader",
 				},
@@ -279,6 +390,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "Invalid downloader config (missing transmission config)",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"invalid_downloader": {}, // Missing Transmission config
 				},
@@ -289,6 +404,10 @@ func TestConfig_validate(t *testing.T) {
 			name: "Invalid downloader config (invalid transmission URL)",
 			config: &Config{
 				PgDSN: "dsn",
+				Telegram: &telegram.Config{
+					Token:  "test_token",
+					ChatID: "test_chat_id",
+				},
 				Downloaders: map[string]*dlconfig.DownloaderConfig{
 					"invalid_downloader": {
 						Transmission: &dlconfig.TransmissionConfig{

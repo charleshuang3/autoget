@@ -7,6 +7,7 @@ import (
 	dlconfig "github.com/charleshuang3/autoget/backend/downloaders/config"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
+	"github.com/charleshuang3/autoget/backend/internal/notify/telegram"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,6 +15,8 @@ type Config struct {
 	Port     string `yaml:"port"`
 	ProxyURL string `yaml:"proxy_url"`
 	PgDSN    string `yaml:"pg_dsn"`
+
+	Telegram *telegram.Config `yaml:"telegram"`
 
 	MTeam   *mteam.Config `yaml:"mteam"`
 	Nyaa    *nyaa.Config  `yaml:"nyaa"`
@@ -48,6 +51,17 @@ func ReadConfig(path string) (*Config, error) {
 func (c *Config) validate() error {
 	if c.PgDSN == "" {
 		return fmt.Errorf("postgres DSN is required")
+	}
+
+	if c.Telegram == nil {
+		return fmt.Errorf("telegram config is required")
+	}
+
+	if c.Telegram.Token == "" {
+		return fmt.Errorf("telegram token is required")
+	}
+	if c.Telegram.ChatID == "" {
+		return fmt.Errorf("telegram chat ID is required")
 	}
 
 	if c.MTeam != nil {
