@@ -63,8 +63,23 @@ func (c *Client) PullRSSAndSearch() {
 					continue
 				}
 
-				// TODO: download
-				// TODO: notification
+				if search.Action == "download" {
+					_, err := c.Download(search.ResID)
+					if err != nil {
+						logger.Error().Err(err).Msg("Failed to download torrent")
+						continue
+					}
+
+					if err := db.DeleteSearch(c.db, search.ID); err != nil {
+						logger.Error().Err(err).Msg("Failed to delete search")
+						continue
+					}
+
+					// TODO: notification
+
+				} else if search.Action == "notification" {
+					// TODO: notification
+				}
 			}
 		}
 	}
