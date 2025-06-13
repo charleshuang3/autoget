@@ -50,15 +50,15 @@ func (c *Config) getProxyURL() string {
 }
 
 type Client struct {
-	config     *Config
-	db         *gorm.DB
+	config      *Config
+	torrentsDir string
+	db          *gorm.DB
+
 	httpClient *http.Client
 
 	DefaultBaseURL string
 	CategoriesMap  map[string]indexers.Category
 	CategoriesList []indexers.Category
-
-	torrentsDir string
 }
 
 func (c *Client) getBaseURL() string {
@@ -68,9 +68,10 @@ func (c *Client) getBaseURL() string {
 	return c.config.BaseURL
 }
 
-func NewClient(config *Config, db *gorm.DB) *Client {
+func NewClient(config *Config, torrentsDir string, db *gorm.DB) *Client {
 	c := &Client{
 		config:         config,
+		torrentsDir:    torrentsDir,
 		db:             db,
 		httpClient:     http.DefaultClient,
 		DefaultBaseURL: defaultBaseURL,
@@ -102,10 +103,6 @@ func (c *Client) Name() string {
 // Categories returns indexer's resource categories.
 func (c *Client) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return c.CategoriesList, nil
-}
-
-func (c *Client) SetTorrentsDir(dir string) {
-	c.torrentsDir = dir
 }
 
 // List resources in given category and keyword (optional).

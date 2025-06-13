@@ -60,7 +60,7 @@ type MTeam struct {
 	torrentsDir string
 }
 
-func NewMTeam(config *Config, db *gorm.DB) *MTeam {
+func NewMTeam(config *Config, torrentsDir string, db *gorm.DB) *MTeam {
 	if config.APIKey == "" {
 		return nil
 	}
@@ -69,6 +69,7 @@ func NewMTeam(config *Config, db *gorm.DB) *MTeam {
 		config:           config,
 		db:               db,
 		standards:        map[string]string{},
+		torrentsDir:      torrentsDir,
 	}
 
 	var err error
@@ -86,8 +87,4 @@ func NewMTeam(config *Config, db *gorm.DB) *MTeam {
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
 	return m.prefetched.Categories.Tree, nil
-}
-
-func (m *MTeam) SetTorrentsDir(dir string) {
-	m.torrentsDir = dir
 }

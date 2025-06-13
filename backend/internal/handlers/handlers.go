@@ -5,11 +5,8 @@ import (
 
 	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
-	"github.com/charleshuang3/autoget/backend/indexers/mteam"
-	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/gin-gonic/gin"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -20,30 +17,11 @@ type Service struct {
 	downloaders map[string]downloaders.IDownloader
 }
 
-func NewService(config *config.Config, db *gorm.DB, cron *cron.Cron, downloaders map[string]downloaders.IDownloader) *Service {
+func NewService(config *config.Config, db *gorm.DB, indexers map[string]indexers.IIndexer, downloaders map[string]downloaders.IDownloader) *Service {
 	s := &Service{
 		config:      config,
-		indexers:    map[string]indexers.IIndexer{},
+		indexers:    indexers,
 		downloaders: downloaders,
-	}
-
-	if config.MTeam != nil {
-		i := mteam.NewMTeam(config.MTeam, db)
-		i.SetTorrentsDir(downloaders[config.MTeam.Downloader].TorrentsDir())
-		i.RegisterRSSCronjob(cron)
-		s.indexers["m-team"] = i
-	}
-	if config.Nyaa != nil {
-		i := nyaa.NewClient(config.Nyaa, db)
-		i.SetTorrentsDir(downloaders[config.Nyaa.Downloader].TorrentsDir())
-		i.RegisterRSSCronjob(cron)
-		s.indexers["nyaa"] = i
-	}
-	if config.Sukebei != nil {
-		i := nyaa.NewClient(config.Sukebei, db)
-		i.SetTorrentsDir(downloaders[config.Sukebei.Downloader].TorrentsDir())
-		i.RegisterRSSCronjob(cron)
-		s.indexers["sukebei"] = i
 	}
 
 	return s

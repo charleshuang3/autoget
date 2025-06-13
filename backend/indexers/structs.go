@@ -18,9 +18,6 @@ type IIndexer interface {
 	// Detail of a resource.
 	Detail(id string, fileList bool) (*ResourceDetail, *errors.HTTPStatusError)
 
-	// SetTorrentsDir allow caller tell where to store torrents.
-	SetTorrentsDir(dir string)
-
 	// Download the torrent file to given dir or return the magnet link.
 	Download(id string) (*DownloadResult, *errors.HTTPStatusError)
 

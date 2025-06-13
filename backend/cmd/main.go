@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/charleshuang3/autoget/backend/downloaders"
+	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/indexers/mteam"
+	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/handlers"
@@ -49,7 +52,24 @@ func main() {
 		downloader.RegisterDailySeedingChecker(cronjob)
 	}
 
-	service := handlers.NewService(cfg, db, cronjob, downloaderMap)
+	indexerMap := map[string]indexers.IIndexer{}
+	if cfg.MTeam != nil {
+		i := mteam.NewMTeam(cfg.MTeam, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db)
+		i.RegisterRSSCronjob(cronjob)
+		indexerMap["m-team"] = i
+	}
+	if cfg.Nyaa != nil {
+		i := nyaa.NewClient(cfg.Nyaa, downloaderMap[cfg.Nyaa.Downloader].TorrentsDir(), db)
+		i.RegisterRSSCronjob(cronjob)
+		indexerMap["nyaa"] = i
+	}
+	if cfg.Sukebei != nil {
+		i := nyaa.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db)
+		i.RegisterRSSCronjob(cronjob)
+		indexerMap["sukebei"] = i
+	}
+
+	service := handlers.NewService(cfg, db, indexerMap, downloaderMap)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
