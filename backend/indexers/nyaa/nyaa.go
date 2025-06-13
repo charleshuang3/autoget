@@ -58,6 +58,7 @@ type Client struct {
 
 	httpClient *http.Client
 
+	Name_          string
 	DefaultBaseURL string
 	CategoriesMap  map[string]indexers.Category
 	CategoriesList []indexers.Category
@@ -72,6 +73,7 @@ func (c *Client) getBaseURL() string {
 
 func NewClient(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *Client {
 	c := &Client{
+		Name_:          "nyaa",
 		config:         config,
 		torrentsDir:    torrentsDir,
 		db:             db,
@@ -100,7 +102,7 @@ func NewClient(config *Config, torrentsDir string, db *gorm.DB, notify notify.IN
 
 // Name of the indexer.
 func (c *Client) Name() string {
-	return "nyaa"
+	return c.Name_
 }
 
 // Categories returns indexer's resource categories.
