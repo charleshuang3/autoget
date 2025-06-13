@@ -23,39 +23,54 @@ func (c *Client) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusE
 }
 
 func (c *Client) RegisterRSSCronjob(cron *cron.Cron) {
-	cron.AddFunc("@every 5m", c.PullRSSAndSearch)
+	cron.AddFunc("@every 5m", func() {
+		feed, err := c.pullRSS()
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to pull RSS feed")
+			return
+		}
+
+		c.searchRSS(feed)
+	})
 }
 
-func (c *Client) PullRSSAndSearch() {
-	searchs, err := db.GetSearchsByIndexer(c.db, c.Name())
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get searchs from database")
-		return
-	}
-
+func (c *Client) pullRSS() (*gofeed.Feed, error) {
 	u, _ := url.Parse(c.getBaseURL())
 	query := u.Query()
 	query.Set("page", "rss")
 	u.RawQuery = query.Encode()
 
 	fp := gofeed.NewParser()
-	fp.Client.Transport = c.httpClient.Transport
-	feed, err := fp.ParseURL(u.String())
+	fp.Client = c.httpClient
+	return fp.ParseURL(u.String())
+}
+
+func (c *Client) parseRSSItem(item *gofeed.Item, target *db.RSSSearch) {
+	target.Title = item.Title
+	target.URL = item.Link
+	target.ResID = getResourceIDFromRSSGUID(item.GUID)
+	target.Catergory = c.getCategoryFromRSSCategory(
+		item.Extensions["nyaa"]["categoryId"][0].Value,
+		item.Extensions["nyaa"]["category"][0].Value)
+}
+
+func (c *Client) searchRSS(feed *gofeed.Feed) {
+	searchs, err := db.GetSearchsByIndexer(c.db, c.Name())
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get RSS feed")
+		logger.Error().Err(err).Msg("Failed to get searchs from database")
 		return
 	}
+
+	downloadStarted := []string{}
+	downloadPendingToStart := []string{}
+
 	for _, item := range feed.Items {
 		for _, search := range searchs {
 			if search.ResID != "" {
 				continue
 			}
 			if strings.Contains(strings.ToLower(item.Title), search.Text) {
-				search.Title = item.Title
-				search.URL = item.Link
-				search.ResID = getResourceIDFromRSSGUID(item.GUID)
-				search.Catergory = c.getCategoryFromRSSCategory(
-					item.Custom["nyaa:categoryId"], item.Custom["nyaa:category"])
+				c.parseRSSItem(item, search)
 
 				err = db.UpdateSearch(c.db, search)
 				if err != nil {
@@ -75,12 +90,22 @@ func (c *Client) PullRSSAndSearch() {
 						continue
 					}
 
-					// TODO: notification
-
+					downloadStarted = append(downloadStarted, search.Title)
 				} else if search.Action == "notification" {
-					// TODO: notification
+					downloadPendingToStart = append(downloadPendingToStart, search.Title)
 				}
 			}
+		}
+	}
+
+	if len(downloadStarted) > 0 || len(downloadPendingToStart) > 0 {
+		msg, err := indexers.RenderRSSResult(c.Name(), downloadStarted, downloadPendingToStart)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to render RSS result")
+			return
+		}
+		if err := c.notify.SendMarkdownMessage(msg); err != nil {
+			logger.Error().Err(err).Msg("Failed to send RSS notification")
 		}
 	}
 }

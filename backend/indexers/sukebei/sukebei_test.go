@@ -10,7 +10,7 @@ import (
 )
 
 func TestCategories(t *testing.T) {
-	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil)
+	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil, nil)
 	got, err := n.Categories()
 	require.Nil(t, err)
 	assert.NotEmpty(t, got)
@@ -18,7 +18,7 @@ func TestCategories(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil)
+	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil, nil)
 
 	tests := []struct {
 		name     string
@@ -67,7 +67,7 @@ func TestList(t *testing.T) {
 
 func TestDownload(t *testing.T) {
 	dir := t.TempDir()
-	n := NewClient(&nyaa.Config{UseProxy: true}, dir, nil)
+	n := NewClient(&nyaa.Config{UseProxy: true}, dir, nil, nil)
 	got, err := n.Download("4322631")
 	require.Nil(t, err)
 	assert.NotEmpty(t, got.TorrentFilePath)
@@ -75,7 +75,7 @@ func TestDownload(t *testing.T) {
 }
 
 func TestDetail(t *testing.T) {
-	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil)
+	n := NewClient(&nyaa.Config{UseProxy: true}, "", nil, nil)
 	got, err := n.Detail("4322631", true)
 	require.Nil(t, err)
 

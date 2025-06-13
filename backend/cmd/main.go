@@ -16,6 +16,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/handlers"
+	"github.com/charleshuang3/autoget/backend/internal/notify/telegram"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
@@ -32,6 +33,11 @@ func main() {
 	cfg, err := config.ReadConfig(*configPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to read config")
+	}
+
+	tg, err := telegram.New(cfg.Telegram)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create telegram notifier")
 	}
 
 	db, err := db.Pg(cfg.PgDSN)
@@ -54,17 +60,17 @@ func main() {
 
 	indexerMap := map[string]indexers.IIndexer{}
 	if cfg.MTeam != nil {
-		i := mteam.NewMTeam(cfg.MTeam, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db)
+		i := mteam.NewMTeam(cfg.MTeam, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
 		indexerMap["m-team"] = i
 	}
 	if cfg.Nyaa != nil {
-		i := nyaa.NewClient(cfg.Nyaa, downloaderMap[cfg.Nyaa.Downloader].TorrentsDir(), db)
+		i := nyaa.NewClient(cfg.Nyaa, downloaderMap[cfg.Nyaa.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
 		indexerMap["nyaa"] = i
 	}
 	if cfg.Sukebei != nil {
-		i := nyaa.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db)
+		i := nyaa.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
 		indexerMap["sukebei"] = i
 	}

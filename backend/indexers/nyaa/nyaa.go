@@ -15,6 +15,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/helpers"
+	"github.com/charleshuang3/autoget/backend/internal/notify"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -53,6 +54,7 @@ type Client struct {
 	config      *Config
 	torrentsDir string
 	db          *gorm.DB
+	notify      notify.INotifier
 
 	httpClient *http.Client
 
@@ -68,11 +70,12 @@ func (c *Client) getBaseURL() string {
 	return c.config.BaseURL
 }
 
-func NewClient(config *Config, torrentsDir string, db *gorm.DB) *Client {
+func NewClient(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *Client {
 	c := &Client{
 		config:         config,
 		torrentsDir:    torrentsDir,
 		db:             db,
+		notify:         notify,
 		httpClient:     http.DefaultClient,
 		DefaultBaseURL: defaultBaseURL,
 		CategoriesMap:  prefetcheddata.Categories,

@@ -8,6 +8,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam/prefetcheddata"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
+	"github.com/charleshuang3/autoget/backend/internal/notify"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -53,6 +54,7 @@ type MTeam struct {
 
 	config *Config
 	db     *gorm.DB
+	notify notify.INotifier
 
 	prefetched *prefetcheddata.Data
 	standards  map[string]string
@@ -60,7 +62,7 @@ type MTeam struct {
 	torrentsDir string
 }
 
-func NewMTeam(config *Config, torrentsDir string, db *gorm.DB) *MTeam {
+func NewMTeam(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *MTeam {
 	if config.APIKey == "" {
 		return nil
 	}
@@ -70,6 +72,7 @@ func NewMTeam(config *Config, torrentsDir string, db *gorm.DB) *MTeam {
 		db:               db,
 		standards:        map[string]string{},
 		torrentsDir:      torrentsDir,
+		notify:           notify,
 	}
 
 	var err error

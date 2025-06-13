@@ -1,15 +1,19 @@
 package nyaa
 
 import (
+	_ "embed"
 	"testing"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/internal/db"
+	"github.com/mmcdole/gofeed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestCategories(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true}, "", nil)
+	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
 	got, err := n.Categories()
 	require.Nil(t, err)
 	assert.NotEmpty(t, got)
@@ -17,7 +21,7 @@ func TestCategories(t *testing.T) {
 }
 
 func TestDetail(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true}, "", nil)
+	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
 	got, err := n.Detail("1980585", true)
 	require.Nil(t, err)
 
@@ -34,7 +38,7 @@ func TestDetail(t *testing.T) {
 }
 
 func TestDetailWithComplexFileLists(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true}, "", nil)
+	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
 	got, err := n.Detail("1980395", true)
 	require.Nil(t, err)
 
@@ -99,7 +103,7 @@ func TestHumanSizeToBytes(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	n := NewClient(&Config{UseProxy: true}, "", nil)
+	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
 
 	tests := []struct {
 		name     string
@@ -148,9 +152,88 @@ func TestList(t *testing.T) {
 
 func TestDownload(t *testing.T) {
 	dir := t.TempDir()
-	n := NewClient(&Config{UseProxy: true}, dir, nil)
+	n := NewClient(&Config{UseProxy: true}, dir, nil, nil)
 	got, err := n.Download("1980585")
 	require.Nil(t, err)
 	assert.NotEmpty(t, got.TorrentFilePath)
 	assert.FileExists(t, got.TorrentFilePath)
+}
+
+func TestPullRSS(t *testing.T) {
+	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
+	feed, err := n.pullRSS()
+	require.NoError(t, err)
+	assert.NotEmpty(t, feed.Items)
+
+	for _, item := range feed.Items {
+		assert.NotEmpty(t, item.Title)
+		assert.NotEmpty(t, item.Link)
+		assert.NotEmpty(t, item.GUID)
+		assert.NotEmpty(t, item.Extensions["nyaa"]["categoryId"])
+		assert.NotEmpty(t, item.Extensions["nyaa"]["category"])
+	}
+}
+
+type fakeNotifier struct {
+	message string
+}
+
+func (f *fakeNotifier) SendMessage(message string) error {
+	f.message = message
+	return nil
+}
+
+func (f *fakeNotifier) SendMarkdownMessage(message string) error {
+	f.message = message
+	return nil
+}
+
+var (
+	//go:embed test_data/rss.xml
+	rssResp string
+)
+
+func TestSearchRSS(t *testing.T) {
+	dir := t.TempDir()
+	d, err := db.SqliteForTest()
+	require.NoError(t, err)
+	notifier := &fakeNotifier{}
+	n := NewClient(&Config{UseProxy: true}, dir, d, notifier)
+
+	search1 := &db.RSSSearch{
+		Indexer: "nyaa",
+		Text:    "Match Search 1",
+		Action:  "download",
+	}
+	db.AddSearch(d, search1)
+
+	search2 := &db.RSSSearch{
+		Indexer: "nyaa",
+		Text:    "Match Search 2",
+		Action:  "notification",
+	}
+	db.AddSearch(d, search2)
+
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseString(rssResp)
+	require.NoError(t, err)
+	require.Len(t, feed.Items, 3)
+
+	n.searchRSS(feed)
+
+	assert.Contains(t, notifier.message, "# nyaa RSS")
+	assert.Contains(t, notifier.message, "## Download Started\n\n- Match Search 1")
+	assert.Contains(t, notifier.message, "## Download Pending to Start\n\n- Match Search 2")
+
+	search1After := &db.RSSSearch{}
+	search1After.ID = search1.ID
+	assert.ErrorIs(t, d.First(&search1After).Error, gorm.ErrRecordNotFound)
+
+	search2After := &db.RSSSearch{}
+	search2After.ID = search2.ID
+	assert.NoError(t, d.First(&search2After).Error)
+	assert.Equal(t, "1981791", search2After.ResID)
+	assert.Equal(t, "Match Search 2", search2After.Title)
+	assert.Equal(t, "Anime - Non-English", search2After.Catergory)
+	assert.Equal(t, "https://nyaa.si/download/1981791.torrent", search2After.URL)
 }
