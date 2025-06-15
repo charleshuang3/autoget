@@ -1,12 +1,16 @@
 package sukebei
 
 import (
+	_ "embed"
 	"testing"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
+	"github.com/charleshuang3/autoget/backend/internal/db"
+	"github.com/mmcdole/gofeed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestCategories(t *testing.T) {
@@ -86,4 +90,68 @@ func TestDetail(t *testing.T) {
 	assert.NotEmpty(t, got.Size)
 	assert.NotEmpty(t, got.Description)
 	assert.NotEmpty(t, got.Files)
+}
+
+type fakeNotifier struct {
+	message string
+}
+
+func (f *fakeNotifier) SendMessage(message string) error {
+	f.message = message
+	return nil
+}
+
+func (f *fakeNotifier) SendMarkdownMessage(message string) error {
+	f.message = message
+	return nil
+}
+
+var (
+	//go:embed test_data/rss.xml
+	rssResp string
+)
+
+func TestSearchRSS(t *testing.T) {
+	dir := t.TempDir()
+	d, err := db.SqliteForTest()
+	require.NoError(t, err)
+	notifier := &fakeNotifier{}
+	n := NewClient(&nyaa.Config{UseProxy: true}, dir, d, notifier)
+
+	search1 := &db.RSSSearch{
+		Indexer: "sukebei",
+		Text:    "Match Search 1",
+		Action:  "download",
+	}
+	db.AddSearch(d, search1)
+
+	search2 := &db.RSSSearch{
+		Indexer: "sukebei",
+		Text:    "Match Search 2",
+		Action:  "notification",
+	}
+	db.AddSearch(d, search2)
+
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseString(rssResp)
+	require.NoError(t, err)
+	require.Len(t, feed.Items, 3)
+
+	n.SearchRSS(feed)
+
+	assert.Contains(t, notifier.message, "# sukebei RSS")
+	assert.Contains(t, notifier.message, "## Download Started\n\n- Match Search 1")
+	assert.Contains(t, notifier.message, "## Download Pending to Start\n\n- Match Search 2")
+
+	search1After := &db.RSSSearch{}
+	search1After.ID = search1.ID
+	assert.ErrorIs(t, d.First(&search1After).Error, gorm.ErrRecordNotFound)
+
+	search2After := &db.RSSSearch{}
+	search2After.ID = search2.ID
+	assert.NoError(t, d.First(&search2After).Error)
+	assert.Equal(t, "4326217", search2After.ResID)
+	assert.Equal(t, "Match Search 2", search2After.Title)
+	assert.Equal(t, "Art - Pictures", search2After.Catergory)
+	assert.Equal(t, "https://sukebei.nyaa.si/download/4326217.torrent", search2After.URL)
 }

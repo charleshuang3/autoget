@@ -123,7 +123,7 @@ func (s *Service) indexerResourceDetail(c *gin.Context) {
 }
 
 func (s *Service) indexerDownload(c *gin.Context) {
-	// TODO
+
 }
 
 type listDownloadersRespItem struct {

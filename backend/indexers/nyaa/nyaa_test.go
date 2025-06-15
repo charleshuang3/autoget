@@ -219,7 +219,7 @@ func TestSearchRSS(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, feed.Items, 3)
 
-	n.searchRSS(feed)
+	n.SearchRSS(feed)
 
 	assert.Contains(t, notifier.message, "# nyaa RSS")
 	assert.Contains(t, notifier.message, "## Download Started\n\n- Match Search 1")

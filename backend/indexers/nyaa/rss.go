@@ -30,7 +30,7 @@ func (c *Client) RegisterRSSCronjob(cron *cron.Cron) {
 			return
 		}
 
-		c.searchRSS(feed)
+		c.SearchRSS(feed)
 	})
 }
 
@@ -54,7 +54,7 @@ func (c *Client) parseRSSItem(item *gofeed.Item, target *db.RSSSearch) {
 		item.Extensions["nyaa"]["category"][0].Value)
 }
 
-func (c *Client) searchRSS(feed *gofeed.Feed) {
+func (c *Client) SearchRSS(feed *gofeed.Feed) {
 	searchs, err := db.GetSearchsByIndexer(c.db, c.Name())
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get searchs from database")
