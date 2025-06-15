@@ -51,6 +51,8 @@ func (c *Config) getProxyURL() string {
 }
 
 type Client struct {
+	indexers.IndexerBasicInfo
+
 	config      *Config
 	torrentsDir string
 	db          *gorm.DB
@@ -58,7 +60,6 @@ type Client struct {
 
 	httpClient *http.Client
 
-	Name_          string
 	DefaultBaseURL string
 	CategoriesMap  map[string]indexers.Category
 	CategoriesList []indexers.Category
@@ -73,15 +74,15 @@ func (c *Client) getBaseURL() string {
 
 func NewClient(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *Client {
 	c := &Client{
-		Name_:          "nyaa",
-		config:         config,
-		torrentsDir:    torrentsDir,
-		db:             db,
-		notify:         notify,
-		httpClient:     http.DefaultClient,
-		DefaultBaseURL: defaultBaseURL,
-		CategoriesMap:  prefetcheddata.Categories,
-		CategoriesList: prefetcheddata.CategoriesList,
+		IndexerBasicInfo: *indexers.NewIndexerBasicInfo("nyaa", false),
+		config:           config,
+		torrentsDir:      torrentsDir,
+		db:               db,
+		notify:           notify,
+		httpClient:       http.DefaultClient,
+		DefaultBaseURL:   defaultBaseURL,
+		CategoriesMap:    prefetcheddata.Categories,
+		CategoriesList:   prefetcheddata.CategoriesList,
 	}
 
 	if config.UseProxy {
