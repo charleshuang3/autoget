@@ -9,7 +9,6 @@ import (
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
-	"github.com/rs/zerolog/log"
 )
 
 type resourceDetail struct {
@@ -54,7 +53,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 	}
 
 	if resp.Code != "0" {
-		log.Error().Any("code", resp.Code).Str("message", resp.Message).Str("API", "/api/torrent/detail").Msg("API error")
+		logger.Error().Any("code", resp.Code).Str("message", resp.Message).Str("API", "/api/torrent/detail").Msg("API error")
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 
@@ -95,7 +94,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 	}
 
 	if filesResp.Code != "0" {
-		log.Error().Any("code", filesResp.Code).Str("message", filesResp.Message).Str("API", "/api/torrent/files").Msg("API error")
+		logger.Error().Any("code", filesResp.Code).Str("message", filesResp.Message).Str("API", "/api/torrent/files").Msg("API error")
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, filesResp.Message)
 	}
 
@@ -138,7 +137,7 @@ func makeMultipartAPICall(baseURL, path, apiKey string, vars map[string]string, 
 	}
 
 	if r.StatusCode != http.StatusOK {
-		log.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
+		logger.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
 		return errors.NewHTTPStatusError(r.StatusCode, "search request failed")
 	}
 

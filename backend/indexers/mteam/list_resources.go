@@ -9,7 +9,6 @@ import (
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
-	"github.com/rs/zerolog/log"
 )
 
 type searchRequest struct {
@@ -193,7 +192,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 	}
 
 	if r.StatusCode != http.StatusOK {
-		log.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
+		logger.Error().Err(err).Str("indexer", name).Int("status_code", r.StatusCode).Msg("API error")
 		return nil, errors.NewHTTPStatusError(r.StatusCode, "search request failed")
 	}
 
@@ -204,7 +203,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 	}
 
 	if resp.Code != "0" {
-		log.Error().Any("code", resp.Code).Str("message", resp.Message).Msg("API error")
+		logger.Error().Any("code", resp.Code).Str("message", resp.Message).Msg("API error")
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 

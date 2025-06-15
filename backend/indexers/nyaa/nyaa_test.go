@@ -161,16 +161,15 @@ func TestDownload(t *testing.T) {
 
 func TestPullRSS(t *testing.T) {
 	n := NewClient(&Config{UseProxy: true}, "", nil, nil)
-	feed, err := n.pullRSS()
+	items, err := n.pullRSS()
 	require.NoError(t, err)
-	assert.NotEmpty(t, feed.Items)
+	assert.NotEmpty(t, items)
 
-	for _, item := range feed.Items {
+	for _, item := range items {
 		assert.NotEmpty(t, item.Title)
-		assert.NotEmpty(t, item.Link)
-		assert.NotEmpty(t, item.GUID)
-		assert.NotEmpty(t, item.Extensions["nyaa"]["categoryId"])
-		assert.NotEmpty(t, item.Extensions["nyaa"]["category"])
+		assert.NotEmpty(t, item.URL)
+		assert.NotEmpty(t, item.ResID)
+		assert.NotEmpty(t, item.Catergory)
 	}
 }
 
@@ -219,7 +218,12 @@ func TestSearchRSS(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, feed.Items, 3)
 
-	n.SearchRSS(feed)
+	items := []*indexers.RSSItem{}
+	for _, item := range feed.Items {
+		items = append(items, n.ParseRSSItem(item))
+	}
+
+	n.SearchRSS(items)
 
 	assert.Contains(t, notifier.message, "# nyaa RSS")
 	assert.Contains(t, notifier.message, "## Download Started\n\n- Match Search 1")

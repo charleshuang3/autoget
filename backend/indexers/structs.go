@@ -128,3 +128,10 @@ type RSSSearch struct {
 	Text   string `json:"text"`
 	Action string `json:"action"`
 }
+
+type RSSItem struct {
+	ResID     string `json:"res_id"`
+	Title     string `json:"title"`
+	Catergory string `json:"catergory"`
+	URL       string `json:"url"`
+}

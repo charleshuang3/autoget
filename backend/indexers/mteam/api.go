@@ -15,6 +15,8 @@ import (
 
 var (
 	_ indexers.IIndexer = (*MTeam)(nil)
+
+	logger = log.With().Str("indexer", name).Logger()
 )
 
 const (
@@ -78,7 +80,7 @@ func NewMTeam(config *Config, torrentsDir string, db *gorm.DB, notify notify.INo
 	var err error
 	m.prefetched, err = prefetcheddata.Read()
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed to read prefetched data: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to read prefetched data: %v", err)
 	}
 
 	for k, v := range m.prefetched.Standards {

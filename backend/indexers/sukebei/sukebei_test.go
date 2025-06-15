@@ -137,7 +137,12 @@ func TestSearchRSS(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, feed.Items, 3)
 
-	n.SearchRSS(feed)
+	items := []*indexers.RSSItem{}
+	for _, item := range feed.Items {
+		items = append(items, n.ParseRSSItem(item))
+	}
+
+	n.SearchRSS(items)
 
 	assert.Contains(t, notifier.message, "# sukebei RSS")
 	assert.Contains(t, notifier.message, "## Download Started\n\n- Match Search 1")

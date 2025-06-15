@@ -8,7 +8,6 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/charleshuang3/autoget/backend/internal/helpers"
-	"github.com/rs/zerolog/log"
 )
 
 type genDownloadLinkResponse struct {
@@ -32,7 +31,7 @@ func (m *MTeam) Download(id string) (*indexers.DownloadResult, *errors.HTTPStatu
 	}
 
 	if resp.Code != "0" {
-		log.Error().Any("code", resp.Code).Str("message", resp.Message).Str("API", "/api/torrent/genDlToken").Msg("API error")
+		logger.Error().Any("code", resp.Code).Str("message", resp.Message).Str("API", "/api/torrent/genDlToken").Msg("API error")
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, resp.Message)
 	}
 

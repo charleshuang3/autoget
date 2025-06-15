@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/indexers/rsshelper"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/mmcdole/gofeed"
@@ -24,17 +25,17 @@ func (c *Client) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusE
 
 func (c *Client) RegisterRSSCronjob(cron *cron.Cron) {
 	cron.AddFunc("@every 5m", func() {
-		feed, err := c.pullRSS()
+		items, err := c.pullRSS()
 		if err != nil {
 			logger.Error().Err(err).Msg("Failed to pull RSS feed")
 			return
 		}
 
-		c.SearchRSS(feed)
+		c.SearchRSS(items)
 	})
 }
 
-func (c *Client) pullRSS() (*gofeed.Feed, error) {
+func (c *Client) pullRSS() ([]*indexers.RSSItem, error) {
 	u, _ := url.Parse(c.getBaseURL())
 	query := u.Query()
 	query.Set("page", "rss")
@@ -42,71 +43,35 @@ func (c *Client) pullRSS() (*gofeed.Feed, error) {
 
 	fp := gofeed.NewParser()
 	fp.Client = c.httpClient
-	return fp.ParseURL(u.String())
-}
-
-func (c *Client) parseRSSItem(item *gofeed.Item, target *db.RSSSearch) {
-	target.Title = item.Title
-	target.URL = item.Link
-	target.ResID = getResourceIDFromRSSGUID(item.GUID)
-	target.Catergory = c.getCategoryFromRSSCategory(
-		item.Extensions["nyaa"]["categoryId"][0].Value,
-		item.Extensions["nyaa"]["category"][0].Value)
-}
-
-func (c *Client) SearchRSS(feed *gofeed.Feed) {
-	searchs, err := db.GetSearchsByIndexer(c.db, c.Name())
+	f, err := fp.ParseURL(u.String())
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get searchs from database")
-		return
+		return nil, err
 	}
 
-	downloadStarted := []string{}
-	downloadPendingToStart := []string{}
-
-	for _, item := range feed.Items {
-		for _, search := range searchs {
-			if search.ResID != "" {
-				continue
-			}
-			if strings.Contains(strings.ToLower(item.Title), search.Text) {
-				c.parseRSSItem(item, search)
-
-				err = db.UpdateSearch(c.db, search)
-				if err != nil {
-					logger.Error().Err(err).Msg("Failed to update search")
-					continue
-				}
-
-				if search.Action == "download" {
-					_, err := c.Download(search.ResID)
-					if err != nil {
-						logger.Error().Err(err).Msg("Failed to download torrent")
-						continue
-					}
-
-					if err := db.DeleteSearch(c.db, search.ID); err != nil {
-						logger.Error().Err(err).Msg("Failed to delete search")
-						continue
-					}
-
-					downloadStarted = append(downloadStarted, search.Title)
-				} else if search.Action == "notification" {
-					downloadPendingToStart = append(downloadPendingToStart, search.Title)
-				}
-			}
-		}
+	items := []*indexers.RSSItem{}
+	for _, item := range f.Items {
+		items = append(items, c.ParseRSSItem(item))
 	}
 
-	if len(downloadStarted) > 0 || len(downloadPendingToStart) > 0 {
-		msg, err := indexers.RenderRSSResult(c.Name(), downloadStarted, downloadPendingToStart)
-		if err != nil {
-			logger.Error().Err(err).Msg("Failed to render RSS result")
-			return
-		}
-		if err := c.notify.SendMarkdownMessage(msg); err != nil {
-			logger.Error().Err(err).Msg("Failed to send RSS notification")
-		}
+	return items, nil
+}
+
+func (c *Client) ParseRSSItem(item *gofeed.Item) *indexers.RSSItem {
+	catergory := ""
+	if item.Extensions != nil &&
+		item.Extensions["nyaa"] != nil &&
+		len(item.Extensions["nyaa"]["categoryId"]) > 0 &&
+		len(item.Extensions["nyaa"]["category"]) > 0 {
+		catergory = c.getCategoryFromRSSCategory(
+			item.Extensions["nyaa"]["categoryId"][0].Value,
+			item.Extensions["nyaa"]["category"][0].Value)
+	}
+
+	return &indexers.RSSItem{
+		ResID:     getResourceIDFromRSSGUID(item.GUID),
+		Title:     item.Title,
+		URL:       item.Link,
+		Catergory: catergory,
 	}
 }
 
@@ -121,4 +86,8 @@ func (c *Client) getCategoryFromRSSCategory(categoryID, category string) string 
 func getResourceIDFromRSSGUID(guid string) string {
 	parts := strings.Split(guid, "/")
 	return parts[len(parts)-1]
+}
+
+func (c *Client) SearchRSS(items []*indexers.RSSItem) {
+	rsshelper.SearchRSS(c, c.db, c.notify, items)
 }

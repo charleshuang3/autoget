@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/charleshuang3/autoget/backend/internal/db"
+	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/mmcdole/gofeed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,10 +25,9 @@ func TestParseRSSItem(t *testing.T) {
 		APIKey: "api-key",
 	}, "", nil, nil)
 
-	got := &db.RSSSearch{}
-	m.parseRSSItem(feed.Items[0], got)
+	got := m.ParseRSSItem(feed.Items[0])
 
-	want := &db.RSSSearch{
+	want := &indexers.RSSItem{
 		ResID:     "111111",
 		Title:     "Match Search 1",
 		Catergory: "AV(無碼)/HD Uncensored",
