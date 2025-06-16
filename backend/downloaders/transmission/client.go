@@ -82,7 +82,7 @@ func (c *Client) checkDailySeeding() {
 		id := c.name + "/" + hash
 		uploaded := *t.UploadedEver
 
-		ss := &db.SeedingStatus{
+		ss := &db.DownloadStatus{
 			ID: id,
 		}
 		err := c.db.First(ss).Error
@@ -110,7 +110,7 @@ func (c *Client) checkDailySeeding() {
 		stopIDs = append(stopIDs, *t.ID)
 	}
 
-	if err := c.db.Where("updated_at < ?", time.Now().AddDate(0, 0, -db.StoreMaxDays)).Delete(&db.SeedingStatus{}).Error; err != nil {
+	if err := c.db.Where("updated_at < ?", time.Now().AddDate(0, 0, -db.StoreMaxDays)).Delete(&db.DownloadStatus{}).Error; err != nil {
 		logger.Error().Err(err).Str("name", c.name).Msg("failed to cleanup seeding status")
 	}
 

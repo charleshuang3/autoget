@@ -12,7 +12,7 @@ func TestStoreSeedingStatus(t *testing.T) {
 	db, err := SqliteForTest()
 	require.NoError(t, err)
 
-	want := &SeedingStatus{
+	want := &DownloadStatus{
 		ID: "1",
 		UploadHistories: map[string]int64{
 			"2025-06-04": 100000,
@@ -22,7 +22,7 @@ func TestStoreSeedingStatus(t *testing.T) {
 
 	db.Create(want)
 
-	got := &SeedingStatus{}
+	got := &DownloadStatus{}
 	db.First(got, "id = ?", want.ID)
 
 	want.CreatedAt = got.CreatedAt
@@ -32,7 +32,7 @@ func TestStoreSeedingStatus(t *testing.T) {
 }
 
 func TestSeedingStatus_AddToday(t *testing.T) {
-	s := &SeedingStatus{
+	s := &DownloadStatus{
 		UploadHistories: make(map[string]int64),
 	}
 	today := time.Now().Format("2006-01-02")
@@ -49,7 +49,7 @@ func TestSeedingStatus_AddToday(t *testing.T) {
 }
 
 func TestSeedingStatus_GetXDayBefore(t *testing.T) {
-	s := &SeedingStatus{
+	s := &DownloadStatus{
 		UploadHistories: make(map[string]int64),
 	}
 
@@ -75,7 +75,7 @@ func TestSeedingStatus_GetXDayBefore(t *testing.T) {
 }
 
 func TestSeedingStatus_CleanupHistory(t *testing.T) {
-	s := &SeedingStatus{
+	s := &DownloadStatus{
 		UploadHistories: make(map[string]int64),
 	}
 

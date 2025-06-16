@@ -8,7 +8,14 @@ const (
 	StoreMaxDays = 30
 )
 
-type SeedingStatus struct {
+type DownloadState uint
+
+const (
+	Started DownloadState = iota
+	Seeding
+)
+
+type DownloadStatus struct {
 	ID        string `gorm:"primarykey"` // download/hash
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -16,18 +23,18 @@ type SeedingStatus struct {
 	UploadHistories map[string]int64 `gorm:"serializer:json"`
 }
 
-func (s *SeedingStatus) AddToday(b int64) {
+func (s *DownloadStatus) AddToday(b int64) {
 	t := time.Now().Format("2006-01-02")
 	s.UploadHistories[t] = b
 }
 
-func (s *SeedingStatus) GetXDayBefore(x int) (int64, bool) {
+func (s *DownloadStatus) GetXDayBefore(x int) (int64, bool) {
 	t := time.Now().AddDate(0, 0, -x).Format("2006-01-02")
 	n, ok := s.UploadHistories[t]
 	return n, ok
 }
 
-func (s *SeedingStatus) CleanupHistory() {
+func (s *DownloadStatus) CleanupHistory() {
 	now := time.Now()
 
 	for k := range s.UploadHistories {

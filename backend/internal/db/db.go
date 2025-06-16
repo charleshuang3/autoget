@@ -52,7 +52,7 @@ func SqliteForTest() (*gorm.DB, error) {
 
 func migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&SeedingStatus{},
+		&DownloadStatus{},
 		&RSSSearch{},
 	)
 }

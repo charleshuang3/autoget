@@ -100,7 +100,7 @@ func TestCheckDailySeeding(t *testing.T) {
 	twoMonthsAgo := time.Now().AddDate(0, -2, 0).Format("2006-01-02")
 
 	// r1 is current seeding, less then 3 day
-	r1 := &db.SeedingStatus{
+	r1 := &db.DownloadStatus{
 		ID: "test/1",
 		UploadHistories: map[string]int64{
 			yesterday: 0,
@@ -109,7 +109,7 @@ func TestCheckDailySeeding(t *testing.T) {
 	require.NoError(t, d.Create(r1).Error)
 
 	// r2 is current seeding, more then 3 day, latest upload - 3 day ago > 1MB, it will continue seeding
-	r2 := &db.SeedingStatus{
+	r2 := &db.DownloadStatus{
 		ID: "test/2",
 		UploadHistories: map[string]int64{
 			threeDaysAgo: 0,
@@ -119,7 +119,7 @@ func TestCheckDailySeeding(t *testing.T) {
 	require.NoError(t, d.Create(r2).Error)
 
 	// r3 is current seeding, more then 3 day, latest upload - 3 day ago < 1MB, it will stop seeding
-	r3 := &db.SeedingStatus{
+	r3 := &db.DownloadStatus{
 		ID: "test/3",
 		UploadHistories: map[string]int64{
 			threeDaysAgo: 0,
@@ -128,7 +128,7 @@ func TestCheckDailySeeding(t *testing.T) {
 	require.NoError(t, d.Create(r3).Error)
 
 	// r4 is not current seeding, more then 30 day, record should be deleted
-	r4 := &db.SeedingStatus{
+	r4 := &db.DownloadStatus{
 		ID:        "test/4",
 		UpdatedAt: time.Now().AddDate(0, 0, -1-db.StoreMaxDays),
 		UploadHistories: map[string]int64{
@@ -160,7 +160,7 @@ func TestCheckDailySeeding(t *testing.T) {
 
 	{
 		// r1 new history item added
-		r := &db.SeedingStatus{}
+		r := &db.DownloadStatus{}
 		require.NoError(t, d.First(r, "id = ?", "test/1").Error)
 		assert.Equal(t, map[string]int64{
 			yesterday: 0,
@@ -170,7 +170,7 @@ func TestCheckDailySeeding(t *testing.T) {
 
 	{
 		// r2 new history item added and cleanup old item.
-		r := &db.SeedingStatus{}
+		r := &db.DownloadStatus{}
 		require.NoError(t, d.First(r, "id = ?", "test/2").Error)
 		assert.Equal(t, map[string]int64{
 			threeDaysAgo: 0,
@@ -180,7 +180,7 @@ func TestCheckDailySeeding(t *testing.T) {
 
 	{
 		// r3 new history item added.
-		r := &db.SeedingStatus{}
+		r := &db.DownloadStatus{}
 		require.NoError(t, d.First(r, "id = ?", "test/3").Error)
 		assert.Equal(t, map[string]int64{
 			threeDaysAgo: 0,
@@ -190,14 +190,14 @@ func TestCheckDailySeeding(t *testing.T) {
 
 	{
 		// r4 should be deleted
-		r := &db.SeedingStatus{}
+		r := &db.DownloadStatus{}
 		err := d.First(r, "id = ?", "test/4").Error
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	}
 
 	{
 		// r5 should be inserted
-		r := &db.SeedingStatus{}
+		r := &db.DownloadStatus{}
 		require.NoError(t, d.First(r, "id = ?", "test/5").Error)
 		assert.Equal(t, map[string]int64{
 			today: 1000 * 1024,
