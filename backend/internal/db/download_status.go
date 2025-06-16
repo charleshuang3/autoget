@@ -2,6 +2,8 @@ package db
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 const (
@@ -11,8 +13,9 @@ const (
 type DownloadState uint
 
 const (
-	Started DownloadState = iota
-	Seeding
+	DownloadStarted DownloadState = iota
+	DownloadSeeding
+	DownloadStopped
 )
 
 type DownloadStatus struct {
@@ -20,6 +23,7 @@ type DownloadStatus struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
+	State           DownloadState
 	UploadHistories map[string]int64 `gorm:"serializer:json"`
 }
 
@@ -43,4 +47,18 @@ func (s *DownloadStatus) CleanupHistory() {
 			delete(s.UploadHistories, k)
 		}
 	}
+}
+
+func GetDownloadStatus(db *gorm.DB, downloader, hash string) (*DownloadStatus, error) {
+	s := &DownloadStatus{}
+	err := db.First(s, "id = ?", downloader+"/"+hash).Error
+	return s, err
+}
+
+func SaveDownloadStatus(db *gorm.DB, s *DownloadStatus) error {
+	return db.Save(s).Error
+}
+
+func RemoveDownloadStatus(db *gorm.DB, id string) error {
+	return db.Where("id = ?", id).Delete(&DownloadStatus{}).Error
 }

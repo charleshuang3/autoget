@@ -79,23 +79,22 @@ func (c *Client) checkDailySeeding() {
 		}
 
 		hash := (*t.HashString)
-		id := c.name + "/" + hash
 		uploaded := *t.UploadedEver
 
-		ss := &db.DownloadStatus{
-			ID: id,
-		}
-		err := c.db.First(ss).Error
+		ss, err := db.GetDownloadStatus(c.db, c.name, hash)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ss.ID = c.name + "/" + hash
+			ss.State = db.DownloadSeeding
 			ss.UploadHistories = make(map[string]int64)
 			ss.AddToday(uploaded)
-			c.db.Create(ss)
+			db.SaveDownloadStatus(c.db, ss)
 
 			continue
 		}
 		ss.CleanupHistory()
 		ss.AddToday(uploaded)
-		c.db.Save(ss)
+
+		db.SaveDownloadStatus(c.db, ss)
 
 		before, ok := ss.GetXDayBefore(int(c.cfg.SeedingPolicy.IntervalInDays))
 		if !ok {
@@ -108,6 +107,9 @@ func (c *Client) checkDailySeeding() {
 
 		// stop this torrent
 		stopIDs = append(stopIDs, *t.ID)
+
+		ss.State = db.DownloadStopped
+		db.SaveDownloadStatus(c.db, ss)
 	}
 
 	if err := c.db.Where("updated_at < ?", time.Now().AddDate(0, 0, -db.StoreMaxDays)).Delete(&db.DownloadStatus{}).Error; err != nil {
