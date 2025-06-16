@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
+	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 type indexerMock struct {
@@ -47,10 +50,6 @@ func (i *indexerMock) Download(id string) (*indexers.DownloadResult, *errors.HTT
 	return i.mockDownloadResult, i.mockDownloadErr
 }
 
-func (i *indexerMock) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusError {
-	return nil
-}
-
 func (i *indexerMock) RegisterRSSCronjob(cron *cron.Cron) {
 
 }
@@ -72,16 +71,19 @@ func (d *downloadersMock) RegisterDailySeedingChecker(cron *cron.Cron) {
 
 }
 
-func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock) {
+func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock, *gorm.DB) {
 	t.Helper()
 
 	gin.SetMode(gin.TestMode)
+	testDB, err := db.SqliteForTest()
+	require.NoError(t, err)
 
 	m := &indexerMock{
 		mockName: "mock",
 	}
 
 	serv := &Service{
+		db: testDB,
 		indexers: map[string]indexers.IIndexer{
 			"mock": m,
 		},
@@ -96,13 +98,13 @@ func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock) {
 	router := gin.Default()
 	serv.SetupRouter(router.Group("/"))
 
-	return serv, router, m
+	return serv, router, m, testDB
 }
 
 func TestService_indexerCategories(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
-		_, router, m := testSetup(t)
+		_, router, m, _ := testSetup(t)
 
 		m.mockCategories = []indexers.Category{
 			{ID: "1", Name: "Category 1"},
@@ -150,7 +152,7 @@ func TestService_indexerCategories(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				_, router, m := testSetup(t)
+				_, router, m, _ := testSetup(t)
 
 				m.mockCategoriesErr = tt.mockErr
 
@@ -172,7 +174,7 @@ func TestService_indexerCategories(t *testing.T) {
 func TestService_listIndexers(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
-		_, router, _ := testSetup(t)
+		_, router, _, _ := testSetup(t)
 
 		w := httptest.NewRecorder()
 
@@ -192,7 +194,7 @@ func TestService_listIndexers(t *testing.T) {
 func TestService_indexerResourceDetail(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
-		_, router, m := testSetup(t)
+		_, router, m, _ := testSetup(t)
 
 		m.mockDetailResult = &indexers.ResourceDetail{
 			ListResourceItem: indexers.ListResourceItem{
@@ -245,7 +247,7 @@ func TestService_indexerResourceDetail(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				_, router, m := testSetup(t)
+				_, router, m, _ := testSetup(t)
 
 				m.mockDetailErr = tt.mockErr
 
@@ -266,7 +268,7 @@ func TestService_indexerResourceDetail(t *testing.T) {
 
 func TestService_indexerListResources(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		_, router, m := testSetup(t)
+		_, router, m, _ := testSetup(t)
 
 		m.mockListResult = &indexers.ListResult{
 			Pagination: indexers.Pagination{
@@ -332,7 +334,7 @@ func TestService_indexerListResources(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				_, router, m := testSetup(t)
+				_, router, m, _ := testSetup(t)
 
 				m.mockListErr = tt.mockErr
 
@@ -351,8 +353,125 @@ func TestService_indexerListResources(t *testing.T) {
 	})
 }
 
+func TestService_indexerRegisterSearch(t *testing.T) {
+	t.Run("success - download action", func(t *testing.T) {
+		_, router, _, testDB := testSetup(t)
+
+		w := httptest.NewRecorder()
+		reqBody := `{"text": "test search", "action": "download"}`
+		req := httptest.NewRequest("GET", "/indexers/mock/registerSearch", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var searches []db.RSSSearch
+		err := testDB.Find(&searches).Error
+		require.NoError(t, err)
+		assert.Len(t, searches, 1)
+		assert.Equal(t, "mock", searches[0].Indexer)
+		assert.Equal(t, "test search", searches[0].Text)
+		assert.Equal(t, "download", searches[0].Action)
+	})
+
+	t.Run("success - notification action", func(t *testing.T) {
+		_, router, _, testDB := testSetup(t)
+
+		w := httptest.NewRecorder()
+		reqBody := `{"text": "another search", "action": "notification"}`
+		req := httptest.NewRequest("GET", "/indexers/mock/registerSearch", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var searches []db.RSSSearch
+		err := testDB.Find(&searches).Error
+		require.NoError(t, err)
+		assert.Len(t, searches, 1)
+		assert.Equal(t, "mock", searches[0].Indexer)
+		assert.Equal(t, "another search", searches[0].Text)
+		assert.Equal(t, "notification", searches[0].Action)
+	})
+
+	t.Run("error - indexer not found", func(t *testing.T) {
+		_, router, _, _ := testSetup(t)
+
+		w := httptest.NewRecorder()
+		reqBody := `{"text": "test", "action": "download"}`
+		req := httptest.NewRequest("GET", "/indexers/nonexistent/registerSearch", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		var resp map[string]string
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Equal(t, "Indexer not found", resp["error"])
+	})
+
+	t.Run("error - invalid request body", func(t *testing.T) {
+		tests := []struct {
+			name        string
+			reqBody     string
+			expectedMsg string
+		}{
+			{
+				name:        "missing text",
+				reqBody:     `{"action": "download"}`,
+				expectedMsg: "Key: 'indexerRegisterSearchReq.Text' Error:Field validation for 'Text' failed on the 'required' tag",
+			},
+			{
+				name:        "missing action",
+				reqBody:     `{"text": "test"}`,
+				expectedMsg: "Key: 'indexerRegisterSearchReq.Action' Error:Field validation for 'Action' failed on the 'required' tag",
+			},
+			{
+				name:        "empty body",
+				reqBody:     `{}`,
+				expectedMsg: "Key: 'indexerRegisterSearchReq.Text' Error:Field validation for 'Text' failed on the 'required' tag",
+			},
+			{
+				name:        "invalid json",
+				reqBody:     `invalid json`,
+				expectedMsg: "invalid character 'i' looking for beginning of value",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				_, router, _, _ := testSetup(t)
+
+				w := httptest.NewRecorder()
+				req := httptest.NewRequest("GET", "/indexers/mock/registerSearch", strings.NewReader(tt.reqBody))
+				req.Header.Set("Content-Type", "application/json")
+				router.ServeHTTP(w, req)
+
+				assert.Equal(t, http.StatusBadRequest, w.Code)
+				var resp map[string]string
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+				assert.Contains(t, resp["error"], tt.expectedMsg)
+			})
+		}
+	})
+
+	t.Run("error - invalid action value", func(t *testing.T) {
+		_, router, _, _ := testSetup(t)
+
+		w := httptest.NewRecorder()
+		reqBody := `{"text": "test", "action": "invalid_action"}`
+		req := httptest.NewRequest("GET", "/indexers/mock/registerSearch", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		var resp map[string]string
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Equal(t, "Invalid action", resp["error"])
+	})
+}
+
 func TestListDownloaders(t *testing.T) {
-	_, router, _ := testSetup(t)
+	_, router, _, _ := testSetup(t)
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/downloaders", nil)

@@ -21,9 +21,6 @@ type IIndexer interface {
 	// Download the torrent file to given dir or return the magnet link.
 	Download(id string) (*DownloadResult, *errors.HTTPStatusError)
 
-	// RegisterSearchForRSS
-	RegisterSearchForRSS(s *RSSSearch) *errors.HTTPStatusError
-
 	// RegisterRSSCronjob
 	RegisterRSSCronjob(cron *cron.Cron)
 }

@@ -6,12 +6,14 @@ import (
 	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/internal/config"
+	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type Service struct {
 	config *config.Config
+	db     *gorm.DB
 
 	indexers    map[string]indexers.IIndexer
 	downloaders map[string]downloaders.IDownloader
@@ -20,6 +22,7 @@ type Service struct {
 func NewService(config *config.Config, db *gorm.DB, indexers map[string]indexers.IIndexer, downloaders map[string]downloaders.IDownloader) *Service {
 	s := &Service{
 		config:      config,
+		db:          db,
 		indexers:    indexers,
 		downloaders: downloaders,
 	}
@@ -33,6 +36,7 @@ func (s *Service) SetupRouter(router *gin.RouterGroup) {
 	router.GET("/indexers/:indexer/resources", s.indexerListResources)
 	router.GET("/indexers/:indexer/resources/:resource", s.indexerResourceDetail)
 	router.GET("/indexers/:indexer/resources/:resource/download", s.indexerDownload)
+	router.GET("/indexers/:indexer/registerSearch", s.indexerRegisterSearch)
 
 	router.GET("/downloaders", s.listDownloaders)
 }
@@ -124,6 +128,40 @@ func (s *Service) indexerResourceDetail(c *gin.Context) {
 
 func (s *Service) indexerDownload(c *gin.Context) {
 
+}
+
+type indexerRegisterSearchReq struct {
+	Text   string `json:"text" binding:"required"`
+	Action string `json:"action" binding:"required"`
+}
+
+func (s *Service) indexerRegisterSearch(c *gin.Context) {
+	indexerName := c.Param("indexer")
+	if _, ok := s.indexers[indexerName]; !ok {
+		c.JSON(404, gin.H{"error": "Indexer not found"})
+		return
+	}
+
+	req := &indexerRegisterSearchReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Action != indexers.ActionDownload &&
+		req.Action != indexers.ActionNotification {
+		c.JSON(400, gin.H{"error": "Invalid action"})
+		return
+	}
+
+	if err := db.AddSearch(s.db, &db.RSSSearch{
+		Indexer: indexerName,
+		Text:    req.Text,
+		Action:  req.Action,
+	}); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 }
 
 type listDownloadersRespItem struct {

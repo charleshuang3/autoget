@@ -5,14 +5,9 @@ import (
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/rsshelper"
-	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/mmcdole/gofeed"
 	"github.com/robfig/cron/v3"
 )
-
-func (m *MTeam) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusError {
-	return nil
-}
 
 func (m *MTeam) RegisterRSSCronjob(cron *cron.Cron) {
 	if m.config.RSS == "" {

@@ -1,27 +1,14 @@
 package nyaa
 
 import (
-	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/rsshelper"
-	"github.com/charleshuang3/autoget/backend/internal/db"
-	"github.com/charleshuang3/autoget/backend/internal/errors"
 	"github.com/mmcdole/gofeed"
 	"github.com/robfig/cron/v3"
 )
-
-func (c *Client) RegisterSearchForRSS(s *indexers.RSSSearch) *errors.HTTPStatusError {
-	search := &db.RSSSearch{
-		Indexer: c.Name(),
-		Text:    s.Text,
-		Action:  s.Action,
-	}
-	err := db.AddSearch(c.db, search)
-	return errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
-}
 
 func (c *Client) RegisterRSSCronjob(cron *cron.Cron) {
 	cron.AddFunc("@every 5m", func() {
