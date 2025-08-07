@@ -37,7 +37,7 @@ func (m *MTeam) Download(id string) (*indexers.DownloadResult, *errors.HTTPStatu
 
 	destFilePath := filepath.Join(m.torrentsDir, name+"."+id+".torrent")
 
-	err = helpers.DownloadFileFromURL(http.DefaultClient, resp.Data, destFilePath)
+	_, _, err = helpers.DownloadTorrentFileFromURL(http.DefaultClient, resp.Data, destFilePath)
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
 	}

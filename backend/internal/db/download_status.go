@@ -23,8 +23,18 @@ type DownloadStatus struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	State           DownloadState
+	State DownloadState
+
 	UploadHistories map[string]int64 `gorm:"serializer:json"`
+
+	ResIndexer string
+	ResTitle   string
+	ResURL     string
+	Category   string
+	FileList   []string `gorm:"serializer:json"`
+
+	Moved    bool
+	MoveList map[string]string `gorm:"serializer:json"`
 }
 
 func (s *DownloadStatus) AddToday(b int64) {

@@ -380,7 +380,7 @@ func (c *Client) Download(id string) (*indexers.DownloadResult, *errors.HTTPStat
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, fmt.Sprintf("failed to join path: %v", err))
 	}
 
-	err = helpers.DownloadFileFromURL(c.httpClient, url, filepath.Join(c.torrentsDir, fileName))
+	_, _, err = helpers.DownloadTorrentFileFromURL(c.httpClient, url, filepath.Join(c.torrentsDir, fileName))
 	if err != nil {
 		return nil, errors.NewHTTPStatusError(http.StatusInternalServerError, err.Error())
 	}
