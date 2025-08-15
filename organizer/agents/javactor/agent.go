@@ -58,5 +58,16 @@ func Run(apiKey string, name string) ([]string, error) {
 		return nil, err
 	}
 
-	return names, nil
+	deduplicated := []string{}
+
+	exists := map[string]bool{}
+	for _, name := range names {
+		if exists[name] {
+			continue
+		}
+		exists[name] = true
+		deduplicated = append(deduplicated, name)
+	}
+
+	return deduplicated, nil
 }
