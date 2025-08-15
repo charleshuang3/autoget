@@ -216,7 +216,7 @@ func TestSearchRSS(t *testing.T) {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseString(rssResp)
 	require.NoError(t, err)
-	require.Len(t, feed.Items, 3)
+	require.Len(t, feed.Items, 2)
 
 	items := []*indexers.RSSItem{}
 	for _, item := range feed.Items {

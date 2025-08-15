@@ -47,7 +47,7 @@ func DownloadTorrentFileFromURL(httpClient *http.Client, url string, dest string
 	defer out.Close()
 
 	// Write the response body to the file
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, bytes.NewReader(buffer.Bytes()))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to copy response body to file: %w", err)
 	}

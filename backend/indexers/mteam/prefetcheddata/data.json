@@ -1376,9 +1376,9 @@
     "45": "CTRL",
     "48": "ZTR",
     "49": "126811",
-    "56": "XieBiAn",
     "57": "DST",
     "58": "ZimaWeb",
+    "59": "StarfallWeb",
     "6": "BMDru",
     "8": "Pack",
     "9": "MTeam"
@@ -1412,12 +1412,11 @@
   },
   "sources": {
     "1": "Bluray",
+    "10": "CD",
     "3": "DVD",
     "4": "Remux",
     "5": "HDTV/TV",
     "6": "Other",
-    "7": "CD",
-    "8": "Web-DL",
-    "9": "Encode"
+    "8": "Web-DL"
   }
 }
