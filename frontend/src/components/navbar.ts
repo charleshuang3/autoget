@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
-import globalStyles from "../index.css?inline";
+import globalStyles from '../index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
@@ -23,7 +23,7 @@ export class AppNavbar extends LitElement {
       }
       this._indexers = await response.json();
     } catch (error) {
-      console.error("Failed to fetch indexers:", error);
+      console.error('Failed to fetch indexers:', error);
       this._indexers = []; // Set to empty array on error
     }
   }
@@ -33,13 +33,16 @@ export class AppNavbar extends LitElement {
       <div class="navbar bg-base-200">
         <div class="navbar-start">
           <a href="/" class="btn-ghost">
-            <img src="/icon.svg" alt="Icon" class="w-8 h-8"/>
+            <img src="/icon.svg" alt="Icon" class="w-8 h-8" />
           </a>
           ${until(
             this._indexers.map(
-              (indexer) => html`<a href="/indexers/${indexer}" class="btn btn-ghost">${indexer}</a>`
+              (indexer) =>
+                html`<a href="/indexers/${indexer}" class="btn btn-ghost"
+                  >${indexer}</a
+                >`,
             ),
-            html`<span class="loading loading-dots loading-sm"></span>`
+            html`<span class="loading loading-dots loading-sm"></span>`,
           )}
         </div>
         <div class="navbar-end">
