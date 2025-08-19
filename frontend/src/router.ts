@@ -12,7 +12,7 @@ export class AppRouter extends LitElement {
       path: '/',
       render: () => html`<div>Loading...</div>`,
       enter: async () => {
-        let newUrl = "/search";
+        let newUrl = '/search';
         try {
           const response = await fetch('/api/v1/indexers');
           if (!response.ok) {

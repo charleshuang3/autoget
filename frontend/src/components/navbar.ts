@@ -42,10 +42,7 @@ export class AppNavbar extends LitElement {
             ${until(
               this._indexers.map((indexer) => {
                 const isActive = this.activePage === indexer;
-                return html`<a
-                  href="/indexers/${indexer}"
-                  class="tab ${isActive ? 'tab-active' : ''}"
-                  role="tab"
+                return html`<a href="/indexers/${indexer}" class="tab ${isActive ? 'tab-active' : ''}" role="tab"
                   >${indexer}</a
                 >`;
               }),
@@ -53,11 +50,7 @@ export class AppNavbar extends LitElement {
           </div>
         </div>
         <div class="navbar-end">
-          <a
-            href="/search"
-            class="btn btn-ghost ${this.activePage === 'search' ? 'btn-active' : ''}"
-            >Search</a
-          >
+          <a href="/search" class="btn btn-ghost ${this.activePage === 'search' ? 'btn-active' : ''}">Search</a>
         </div>
       </div>
     `;
