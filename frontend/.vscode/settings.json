@@ -5,5 +5,7 @@
   "editor.tabSize": 2,
   "files.insertFinalNewline": true,
   "prettier.singleQuote": true,
-  "prettier.printWidth": 120
+  "prettier.printWidth": 120,
+  "lit-plugin.rules.no-nullable-attribute-binding": "off",
+  "lit-plugin.rules.no-incompatible-type-binding": "off"
 }
