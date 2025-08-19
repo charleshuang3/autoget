@@ -4,7 +4,7 @@
 - Write code in **TypeScript**, with strict typings enabled.
 - Use **DaisyUI** classes for design and styling: e.g., `btn`, `card`, etc.
 - Implement layout using **CSS Flexbox** only—prefer `flex`, `flex-col`, `flex-row`, `flex-grow`, `items-`, `justify-` identifiers.
-- Use `@vaadin/router` for Single Page Application (SPA) routing.
+- Use `@lit-labs/router` for Single Page Application (SPA) routing.
 
 ## Code Conventions
 
