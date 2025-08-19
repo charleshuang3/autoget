@@ -1,7 +1,9 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
+  // the plugin has problem for lit embeded html, use command line instead
+  // "editor.formatOnSave": true,
   "editor.tabSize": 2,
+  "files.insertFinalNewline": true,
   "prettier.singleQuote": true,
-  "files.insertFinalNewline": true
+  "prettier.printWidth": 120
 }

@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
-import globalStyles from '../index.css?inline';
+import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
@@ -35,15 +35,13 @@ export class AppNavbar extends LitElement {
           <a href="/" class="btn-ghost">
             <img src="/icon.svg" alt="Icon" class="w-8 h-8" />
           </a>
-          ${until(
-            this._indexers.map(
-              (indexer) =>
-                html`<a href="/indexers/${indexer}" class="btn btn-ghost"
-                  >${indexer}</a
-                >`,
-            ),
-            html`<span class="loading loading-dots loading-sm"></span>`,
-          )}
+          <div role="tablist" class="tabs tabs-border">
+            ${until(
+              this._indexers.map((indexer) => {
+                return html`<a href="/indexers/${indexer}" class="tab" role="tab">${indexer}</a>`;
+              }),
+            )}
+          </div>
         </div>
         <div class="navbar-end">
           <a href="/search" class="btn btn-ghost">Search</a>
