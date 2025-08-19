@@ -1,11 +1,14 @@
 import { LitElement, html, unsafeCSS } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
   static styles = [unsafeCSS(globalStyles)];
+
+  @property({ type: String })
+  activePage = '';
 
   @state()
   private _indexers: string[] = [];
@@ -38,13 +41,23 @@ export class AppNavbar extends LitElement {
           <div role="tablist" class="tabs tabs-border">
             ${until(
               this._indexers.map((indexer) => {
-                return html`<a href="/indexers/${indexer}" class="tab" role="tab">${indexer}</a>`;
+                const isActive = this.activePage === indexer;
+                return html`<a
+                  href="/indexers/${indexer}"
+                  class="tab ${isActive ? 'tab-active' : ''}"
+                  role="tab"
+                  >${indexer}</a
+                >`;
               }),
             )}
           </div>
         </div>
         <div class="navbar-end">
-          <a href="/search" class="btn btn-ghost">Search</a>
+          <a
+            href="/search"
+            class="btn btn-ghost ${this.activePage === 'search' ? 'btn-active' : ''}"
+            >Search</a
+          >
         </div>
       </div>
     `;
