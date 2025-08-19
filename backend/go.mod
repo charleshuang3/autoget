@@ -7,7 +7,7 @@ require (
 	github.com/anacrolix/torrent v1.58.1
 	github.com/gin-gonic/gin v1.10.1
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-telegram/bot v1.15.0
+	github.com/go-telegram/bot v1.17.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hekmon/transmissionrpc/v3 v3.0.0
 	github.com/mmcdole/gofeed v1.3.0
