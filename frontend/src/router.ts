@@ -1,30 +1,24 @@
 import { Router } from '@lit-labs/router';
 import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
+import { consume } from '@lit/context';
+import { indexersContext } from './context.ts';
 
 import './views/search_view';
 import './views/indexer_view';
 
 @customElement('app-router')
 export class AppRouter extends LitElement {
+  @consume({ context: indexersContext, subscribe: true })
+  @property({ attribute: false })
+  public indexers: string[] = [];
+
   private router = new Router(this, [
     {
       path: '/',
       render: () => html`<div>Loading...</div>`,
       enter: async () => {
-        let newUrl = '/search';
-        try {
-          const response = await fetch('/api/v1/indexers');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const indexers = await response.json();
-          if (indexers && indexers.length > 0) {
-            newUrl = `/indexers/${indexers[0]}`;
-          }
-        } catch (error) {
-          console.error('Failed to fetch indexers, redirecting to search', error);
-        }
+        let newUrl = `/indexers/${this.indexers[0]}`;
         this.router.goto(newUrl);
         history.replaceState(null, '', newUrl);
         return false;

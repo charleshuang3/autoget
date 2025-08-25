@@ -1,35 +1,20 @@
 import { LitElement, html, unsafeCSS } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
+import { consume } from '@lit/context';
+import { indexersContext } from '../context.ts';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
+  @consume({ context: indexersContext, subscribe: true })
+  @property({ attribute: false })
+  public indexers: string[] = [];
+
   static styles = [unsafeCSS(globalStyles)];
 
   @property({ type: String })
   activePage = '';
-
-  @state()
-  private _indexers: string[] = [];
-
-  connectedCallback() {
-    super.connectedCallback();
-    this._fetchIndexers();
-  }
-
-  private async _fetchIndexers() {
-    try {
-      const response = await fetch('/api/v1/indexers');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      this._indexers = await response.json();
-    } catch (error) {
-      console.error('Failed to fetch indexers:', error);
-      this._indexers = []; // Set to empty array on error
-    }
-  }
 
   render() {
     return html`
@@ -40,7 +25,7 @@ export class AppNavbar extends LitElement {
           </a>
           <div role="tablist" class="tabs tabs-border">
             ${until(
-              this._indexers.map((indexer) => {
+              this.indexers.map((indexer) => {
                 const isActive = this.activePage === indexer;
                 return html`<a href="/indexers/${indexer}" class="tab ${isActive ? 'tab-active' : ''}" role="tab"
                   >${indexer}</a
