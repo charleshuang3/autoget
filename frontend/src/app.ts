@@ -49,7 +49,7 @@ export class App extends LitElement {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      let categories = await response.json();
+      const categories = await response.json();
       this.catchedIndexerCategories.set(indexer, categories);
       return categories;
     } catch (error) {

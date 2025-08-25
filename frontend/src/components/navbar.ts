@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
 import { consume } from '@lit/context';
 
-import { indexersContext, indexerDetailsContext, type IndexerDetails, type Category } from '../context.ts';
+import { indexersContext, indexerDetailsContext, type IndexerDetails } from '../context.ts';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')

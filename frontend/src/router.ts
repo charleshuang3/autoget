@@ -22,7 +22,7 @@ export class AppRouter extends LitElement {
       path: '/',
       render: () => html`<div>Loading...</div>`,
       enter: async () => {
-        let newUrl = `/indexers/${this.indexers[0]}`;
+        const newUrl = `/indexers/${this.indexers[0]}`;
         this.router.goto(newUrl);
         history.replaceState(null, '', newUrl);
         return false;
