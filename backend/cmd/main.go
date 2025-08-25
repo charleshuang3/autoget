@@ -13,6 +13,7 @@ import (
 	"github.com/charleshuang3/autoget/backend/indexers"
 	"github.com/charleshuang3/autoget/backend/indexers/mteam"
 	"github.com/charleshuang3/autoget/backend/indexers/nyaa"
+	"github.com/charleshuang3/autoget/backend/indexers/sukebei"
 	"github.com/charleshuang3/autoget/backend/internal/config"
 	"github.com/charleshuang3/autoget/backend/internal/db"
 	"github.com/charleshuang3/autoget/backend/internal/handlers"
@@ -70,7 +71,7 @@ func main() {
 		indexerMap["nyaa"] = i
 	}
 	if cfg.Sukebei != nil {
-		i := nyaa.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db, tg)
+		i := sukebei.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
 		indexerMap["sukebei"] = i
 	}

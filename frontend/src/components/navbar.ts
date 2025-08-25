@@ -3,29 +3,21 @@ import { customElement, property } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
 import { consume } from '@lit/context';
 
-import { indexersContext, indexerDetailsContext, type IndexerDetails } from '../context.ts';
+import { indexersContext } from '../context.ts';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
+  static styles = [unsafeCSS(globalStyles)];
+
   @consume({ context: indexersContext, subscribe: true })
   @property({ attribute: false })
   public indexers: string[] = [];
-
-  @consume({ context: indexerDetailsContext, subscribe: true })
-  @property({ attribute: false })
-  public indexerDetails!: IndexerDetails;
-
-  static styles = [unsafeCSS(globalStyles)];
 
   @property({ type: String })
   activePage = '';
 
   render() {
-    this.indexerDetails.categories(this.activePage).then((categories) => {
-      console.log(categories);
-    });
-
     return html`
       <div class="navbar bg-base-200">
         <div class="navbar-start">
