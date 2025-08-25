@@ -1,4 +1,4 @@
-import { html, LitElement, unsafeCSS, type TemplateResult } from 'lit';
+import { html, LitElement, unsafeCSS, css, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { until } from 'lit/directives/until.js';
@@ -9,7 +9,18 @@ import globalStyles from '/src/index.css?inline';
 
 @customElement('indexer-view')
 export class IndexerView extends LitElement {
-  static styles = [unsafeCSS(globalStyles)];
+  static styles = [
+    unsafeCSS(globalStyles),
+    css`
+      #left-panel-categories li ul {
+        margin-inline-start: 0.75rem;
+        padding-left: 0;
+      }
+      #left-panel-categories li a {
+        padding-left: 0.5rem;
+      }
+    `,
+  ];
 
   @consume({ context: indexerIdContext, subscribe: true })
   @property({ attribute: false })
@@ -23,12 +34,10 @@ export class IndexerView extends LitElement {
     if (category.subCategories && category.subCategories.length > 0) {
       return html`
         <li>
-          <details>
-            <summary>${category.name}</summary>
-            <ul>
-              ${category.subCategories.map((child) => this.renderCategory(child))}
-            </ul>
-          </details>
+          <a>${category.name}</a>
+          <ul>
+            ${category.subCategories.map((child) => this.renderCategory(child))}
+          </ul>
         </li>
       `;
     } else {
@@ -41,8 +50,8 @@ export class IndexerView extends LitElement {
       <div class="flex flex-col h-screen">
         <app-navbar .activePage=${this.indexer_id}></app-navbar>
 
-        <div class="flex flex-row flex-grow">
-          <div class="flex-2 bg-base-200" id="left-panel-categories">
+        <div class="flex flex-row flex-grow overflow-hidden">
+          <div class="flex-2 bg-base-200 overflow-y-auto" id="left-panel-categories">
             <ul class="menu bg-base-200 rounded-box w-full">
               ${until(
                 this.indexerDetails.categories(this.indexer_id).then((categories) => {
@@ -52,7 +61,7 @@ export class IndexerView extends LitElement {
             </ul>
           </div>
 
-          <div class="flex-10 p-4" id="content">Indexer View: ${this.indexer_id}</div>
+          <div class="flex-10 p-4 overflow-y-auto" id="content">Indexer View: ${this.indexer_id}</div>
         </div>
       </div>
     `;
