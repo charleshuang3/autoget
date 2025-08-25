@@ -2,7 +2,7 @@ import { Router } from '@lit-labs/router';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { consume, provide } from '@lit/context';
-import { indexersContext, indexIdContext } from './context.ts';
+import { indexersContext, indexerIdContext } from './context.ts';
 
 import './views/search_view';
 import './views/indexer_view';
@@ -13,7 +13,7 @@ export class AppRouter extends LitElement {
   @property({ attribute: false })
   public indexers: string[] = [];
 
-  @provide({ context: indexIdContext })
+  @provide({ context: indexerIdContext })
   @property({ attribute: false })
   public index_id = '';
 

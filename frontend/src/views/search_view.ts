@@ -1,5 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+
 import '../components/navbar.ts';
 
 @customElement('search-view')
