@@ -27,6 +27,26 @@ func TestToCategoryJSON(t *testing.T) {
 	want := &categoryJSON{
 		CategoryTree: []*categoryWithOrder{
 			{
+				ID:   "normal",
+				Name: "normal",
+				SubCategories: []*categoryWithOrder{
+					{
+						ID:        "110",
+						Name:      "Music",
+						Order:     4,
+						NumericID: 110,
+						SubCategories: []*categoryWithOrder{
+							{
+								ID:        "434",
+								Name:      "Music(无损)",
+								Order:     1,
+								NumericID: 434,
+							},
+						},
+					},
+				},
+			},
+			{
 				ID:   "adult",
 				Name: "adult",
 				SubCategories: []*categoryWithOrder{
@@ -47,26 +67,6 @@ func TestToCategoryJSON(t *testing.T) {
 								Name:      "AV(Gay)/HD",
 								Order:     440,
 								NumericID: 440,
-							},
-						},
-					},
-				},
-			},
-			{
-				ID:   "normal",
-				Name: "normal",
-				SubCategories: []*categoryWithOrder{
-					{
-						ID:        "110",
-						Name:      "Music",
-						Order:     4,
-						NumericID: 110,
-						SubCategories: []*categoryWithOrder{
-							{
-								ID:        "434",
-								Name:      "Music(无损)",
-								Order:     1,
-								NumericID: 434,
 							},
 						},
 					},

@@ -92,8 +92,8 @@ func (l *listCategories) toCategoryJSON(excludeGayContent bool) *categoryJSON {
 		Name: categoryNormal,
 	}
 	roots := []*categoryWithOrder{
-		adultRoot,
 		normalRoot,
+		adultRoot,
 	}
 
 	categories := map[string]*categoryWithOrder{

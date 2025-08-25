@@ -2,130 +2,6 @@
   "categories": {
     "tree": [
       {
-        "id": "adult",
-        "name": "adult",
-        "subCategories": [
-          {
-            "id": "115",
-            "name": "AV(有码)",
-            "subCategories": [
-              {
-                "id": "410",
-                "name": "AV(有码)/HD Censored",
-                "Order": 31,
-                "NumericID": 410
-              },
-              {
-                "id": "424",
-                "name": "AV(有码)/SD Censored",
-                "Order": 33,
-                "NumericID": 424
-              },
-              {
-                "id": "437",
-                "name": "AV(有码)/DVDiSo Censored",
-                "Order": 36,
-                "NumericID": 437
-              },
-              {
-                "id": "431",
-                "name": "AV(有码)/Blu-Ray Censored",
-                "Order": 37,
-                "NumericID": 431
-              }
-            ],
-            "Order": 20,
-            "NumericID": 115
-          },
-          {
-            "id": "120",
-            "name": "AV(无码)",
-            "subCategories": [
-              {
-                "id": "429",
-                "name": "AV(无码)/HD Uncensored",
-                "Order": 32,
-                "NumericID": 429
-              },
-              {
-                "id": "430",
-                "name": "AV(无码)/SD Uncensored",
-                "Order": 34,
-                "NumericID": 430
-              },
-              {
-                "id": "426",
-                "name": "AV(无码)/DVDiSo Uncensored",
-                "Order": 35,
-                "NumericID": 426
-              },
-              {
-                "id": "432",
-                "name": "AV(无码)/Blu-Ray Uncensored",
-                "Order": 38,
-                "NumericID": 432
-              },
-              {
-                "id": "436",
-                "name": "AV(网站)/0Day",
-                "Order": 39,
-                "NumericID": 436
-              }
-            ],
-            "Order": 21,
-            "NumericID": 120
-          },
-          {
-            "id": "445",
-            "name": "IV",
-            "subCategories": [
-              {
-                "id": "425",
-                "name": "IV(写真影集)",
-                "Order": 40,
-                "NumericID": 425
-              },
-              {
-                "id": "433",
-                "name": "IV(写真图集)",
-                "Order": 41,
-                "NumericID": 433
-              }
-            ],
-            "Order": 22,
-            "NumericID": 445
-          },
-          {
-            "id": "446",
-            "name": "H-ACG",
-            "subCategories": [
-              {
-                "id": "411",
-                "name": "H-游戏",
-                "Order": 51,
-                "NumericID": 411
-              },
-              {
-                "id": "412",
-                "name": "H-动漫",
-                "Order": 52,
-                "NumericID": 412
-              },
-              {
-                "id": "413",
-                "name": "H-漫画",
-                "Order": 53,
-                "NumericID": 413
-              }
-            ],
-            "Order": 23,
-            "NumericID": 446
-          }
-        ],
-        "Order": 0,
-        "NumericID": 0
-      },
-      {
         "id": "normal",
         "name": "normal",
         "subCategories": [
@@ -310,6 +186,130 @@
             ],
             "Order": 8,
             "NumericID": 450
+          }
+        ],
+        "Order": 0,
+        "NumericID": 0
+      },
+      {
+        "id": "adult",
+        "name": "adult",
+        "subCategories": [
+          {
+            "id": "115",
+            "name": "AV(有码)",
+            "subCategories": [
+              {
+                "id": "410",
+                "name": "AV(有码)/HD Censored",
+                "Order": 31,
+                "NumericID": 410
+              },
+              {
+                "id": "424",
+                "name": "AV(有码)/SD Censored",
+                "Order": 33,
+                "NumericID": 424
+              },
+              {
+                "id": "437",
+                "name": "AV(有码)/DVDiSo Censored",
+                "Order": 36,
+                "NumericID": 437
+              },
+              {
+                "id": "431",
+                "name": "AV(有码)/Blu-Ray Censored",
+                "Order": 37,
+                "NumericID": 431
+              }
+            ],
+            "Order": 20,
+            "NumericID": 115
+          },
+          {
+            "id": "120",
+            "name": "AV(无码)",
+            "subCategories": [
+              {
+                "id": "429",
+                "name": "AV(无码)/HD Uncensored",
+                "Order": 32,
+                "NumericID": 429
+              },
+              {
+                "id": "430",
+                "name": "AV(无码)/SD Uncensored",
+                "Order": 34,
+                "NumericID": 430
+              },
+              {
+                "id": "426",
+                "name": "AV(无码)/DVDiSo Uncensored",
+                "Order": 35,
+                "NumericID": 426
+              },
+              {
+                "id": "432",
+                "name": "AV(无码)/Blu-Ray Uncensored",
+                "Order": 38,
+                "NumericID": 432
+              },
+              {
+                "id": "436",
+                "name": "AV(网站)/0Day",
+                "Order": 39,
+                "NumericID": 436
+              }
+            ],
+            "Order": 21,
+            "NumericID": 120
+          },
+          {
+            "id": "445",
+            "name": "IV",
+            "subCategories": [
+              {
+                "id": "425",
+                "name": "IV(写真影集)",
+                "Order": 40,
+                "NumericID": 425
+              },
+              {
+                "id": "433",
+                "name": "IV(写真图集)",
+                "Order": 41,
+                "NumericID": 433
+              }
+            ],
+            "Order": 22,
+            "NumericID": 445
+          },
+          {
+            "id": "446",
+            "name": "H-ACG",
+            "subCategories": [
+              {
+                "id": "411",
+                "name": "H-游戏",
+                "Order": 51,
+                "NumericID": 411
+              },
+              {
+                "id": "412",
+                "name": "H-动漫",
+                "Order": 52,
+                "NumericID": 412
+              },
+              {
+                "id": "413",
+                "name": "H-漫画",
+                "Order": 53,
+                "NumericID": 413
+              }
+            ],
+            "Order": 23,
+            "NumericID": 446
           }
         ],
         "Order": 0,
