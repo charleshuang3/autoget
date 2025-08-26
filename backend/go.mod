@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
-	github.com/anacrolix/torrent v1.59.0
+	github.com/anacrolix/torrent v1.59.1
 	github.com/gin-gonic/gin v1.10.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-telegram/bot v1.17.0
