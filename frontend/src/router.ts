@@ -1,15 +1,16 @@
 import { Router } from '@lit-labs/router';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { fetchIndexers } from './utils/api.ts';
+import { fetchIndexers, type Category, fetchIndexerCategories } from './utils/api.ts';
 
 import './views/search_view';
 import './views/indexer_view';
+import './views/404_view';
 
 @customElement('app-router')
 export class AppRouter extends LitElement {
   @state()
-  private _indexers: string[] = [];
+  private indexers: string[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
@@ -17,7 +18,7 @@ export class AppRouter extends LitElement {
   }
 
   private async fetchIndexers() {
-    this._indexers = await fetchIndexers();
+    this.indexers = await fetchIndexers();
   }
 
   private router = new Router(this, [
@@ -25,10 +26,10 @@ export class AppRouter extends LitElement {
       path: '/',
       render: () => html`<div>Loading...</div>`,
       enter: async () => {
-        if (this._indexers.length === 0) {
+        if (this.indexers.length === 0) {
           await this.fetchIndexers();
         }
-        const newUrl = `/indexers/${this._indexers[0]}`;
+        const newUrl = `/indexers/${this.indexers[0]}`;
         this.router.goto(newUrl);
         history.replaceState(null, '', newUrl);
         return false;
@@ -38,7 +39,20 @@ export class AppRouter extends LitElement {
     {
       path: '/indexers/:id',
       render: ({ id }) => {
-        return html`<indexer-view .indexerId=${id || ''}></indexer-view>`;
+        return html`<indexer-view .indexerId=${id || ''} category=""></indexer-view>`;
+      },
+      enter: async ({ id }) => {
+        if (this.indexers.length === 0) {
+          await this.fetchIndexers();
+        }
+        if (id === undefined || !this.indexers.includes(id)) {
+          this.router.goto('/404');
+          return false;
+        }
+        const categories = await fetchIndexerCategories(id);
+        this.router.goto(`/indexers/${id}/${categories[0].id}`);
+        history.replaceState(null, '', `/indexers/${id}/${categories[0].id}`);
+        return false;
       },
     },
     {
@@ -47,6 +61,7 @@ export class AppRouter extends LitElement {
         return html`<indexer-view .indexerId=${id || ''} .category=${category || ''}></indexer-view>`;
       },
     },
+    { path: '*', render: () => html`<not-found-view></not-found-view>` },
   ]);
 
   render() {

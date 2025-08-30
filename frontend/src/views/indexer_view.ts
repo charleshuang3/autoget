@@ -1,4 +1,4 @@
-import { html, LitElement, unsafeCSS, css, type TemplateResult } from 'lit';
+import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import { type Category, fetchIndexerCategories } from '../utils/api';
@@ -52,14 +52,15 @@ export class IndexerView extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     await this.fetchIndexerCategories();
-    await this.setDefaultCategory();
   }
 
-  private async setDefaultCategory() {
-    if (!this.category) {
-      this.category = this.categories[0].id;
+  protected update(changedProperties: PropertyValues): void {
+    if (changedProperties.has('indexerId')) {
+      this.fetchIndexerCategories();
     }
+    super.update(changedProperties);
   }
+
   private async fetchIndexerCategories() {
     this.categories = await fetchIndexerCategories(this.indexerId);
   }
