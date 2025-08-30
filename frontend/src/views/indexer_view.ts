@@ -30,19 +30,39 @@ export class IndexerView extends LitElement {
   @property({ attribute: false })
   public indexerDetails!: IndexerDetails;
 
+  @property({ type: String })
+  public category: string = '';
+
+  private async setDefaultCategory() {
+    if (!this.category) {
+      const categories = await this.indexerDetails.categories(this.indexer_id);
+      if (categories.length > 0) {
+        this.category = categories[0].id;
+      }
+    }
+  }
+
   private renderCategory(category: Category): TemplateResult {
+    const isActive = this.category === category.id;
+    const activeClass = isActive ? 'menu-active' : '';
+
     if (category.subCategories && category.subCategories.length > 0) {
       return html`
         <li>
-          <a>${category.name}</a>
+          <a class="${activeClass}" href="/indexers/${this.indexer_id}/${category.id}">${category.name}</a>
           <ul>
             ${category.subCategories.map((child) => this.renderCategory(child))}
           </ul>
         </li>
       `;
     } else {
-      return html` <li><a>${category.name}</a></li> `;
+      return html`<li><a class="${activeClass}" href="/indexers/${this.indexer_id}/${category.id}">${category.name}</a></li> `;
     }
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.setDefaultCategory();
   }
 
   render() {

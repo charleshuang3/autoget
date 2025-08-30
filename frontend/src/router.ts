@@ -36,6 +36,13 @@ export class AppRouter extends LitElement {
         return html`<indexer-view></indexer-view>`;
       },
     },
+    {
+      path: '/indexers/:id/:category',
+      render: ({ id, category }) => {
+        this.index_id = id || '';
+        return html`<indexer-view .category=${category || ''}></indexer-view>`;
+      },
+    },
   ]);
 
   render() {
