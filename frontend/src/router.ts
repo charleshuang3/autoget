@@ -1,28 +1,34 @@
 import { Router } from '@lit-labs/router';
 import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { consume, provide } from '@lit/context';
-import { indexersContext, indexerIdContext } from './context.ts';
+import { customElement, state } from 'lit/decorators.js';
+import { fetchIndexers } from './utils/api.ts';
 
 import './views/search_view';
 import './views/indexer_view';
 
 @customElement('app-router')
 export class AppRouter extends LitElement {
-  @consume({ context: indexersContext, subscribe: true })
-  @property({ attribute: false })
-  public indexers: string[] = [];
+  @state()
+  private _indexers: string[] = [];
 
-  @provide({ context: indexerIdContext })
-  @property({ attribute: false })
-  public index_id = '';
+  async connectedCallback() {
+    super.connectedCallback();
+    this.fetchIndexers();
+  }
+
+  private async fetchIndexers() {
+    this._indexers = await fetchIndexers();
+  }
 
   private router = new Router(this, [
     {
       path: '/',
       render: () => html`<div>Loading...</div>`,
       enter: async () => {
-        const newUrl = `/indexers/${this.indexers[0]}`;
+        if (this._indexers.length === 0) {
+          await this.fetchIndexers();
+        }
+        const newUrl = `/indexers/${this._indexers[0]}`;
         this.router.goto(newUrl);
         history.replaceState(null, '', newUrl);
         return false;
@@ -32,15 +38,13 @@ export class AppRouter extends LitElement {
     {
       path: '/indexers/:id',
       render: ({ id }) => {
-        this.index_id = id || '';
-        return html`<indexer-view></indexer-view>`;
+        return html`<indexer-view .indexerId=${id || ''}></indexer-view>`;
       },
     },
     {
       path: '/indexers/:id/:category',
       render: ({ id, category }) => {
-        this.index_id = id || '';
-        return html`<indexer-view .category=${category || ''}></indexer-view>`;
+        return html`<indexer-view .indexerId=${id || ''} .category=${category || ''}></indexer-view>`;
       },
     },
   ]);

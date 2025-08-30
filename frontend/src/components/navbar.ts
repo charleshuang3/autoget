@@ -1,21 +1,23 @@
 import { LitElement, html, unsafeCSS } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { until } from 'lit/directives/until.js';
-import { consume } from '@lit/context';
+import { customElement, property, state } from 'lit/decorators.js';
 
-import { indexersContext } from '../context.ts';
+import { fetchIndexers } from '../utils/api';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('app-navbar')
 export class AppNavbar extends LitElement {
   static styles = [unsafeCSS(globalStyles)];
 
-  @consume({ context: indexersContext, subscribe: true })
-  @property({ attribute: false })
-  public indexers: string[] = [];
+  @state()
+  private indexers: string[] = [];
 
   @property({ type: String })
   activePage = '';
+
+  async connectedCallback() {
+    super.connectedCallback();
+    this.indexers = await fetchIndexers();
+  }
 
   render() {
     return html`
@@ -25,14 +27,12 @@ export class AppNavbar extends LitElement {
             <img src="/icon.svg" alt="Icon" class="w-8 h-8" />
           </a>
           <div role="tablist" class="tabs tabs-border">
-            ${until(
-              this.indexers.map((indexer) => {
-                const isActive = this.activePage === indexer;
-                return html`<a href="/indexers/${indexer}" class="tab ${isActive ? 'tab-active' : ''}" role="tab"
-                  >${indexer}</a
-                >`;
-              }),
-            )}
+            ${this.indexers.map((indexer) => {
+              const isActive = this.activePage === indexer;
+              return html`<a href="/indexers/${indexer}" class="tab ${isActive ? 'tab-active' : ''}" role="tab"
+                >${indexer}</a
+              >`;
+            })}
           </div>
         </div>
         <div class="navbar-end">
