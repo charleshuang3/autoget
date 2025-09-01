@@ -1,7 +1,7 @@
 import { Router } from '@lit-labs/router';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { fetchIndexers, type Category, fetchIndexerCategories } from './utils/api.ts';
+import { fetchIndexers, fetchIndexerCategories } from './utils/api.ts';
 
 import './views/search_view';
 import './views/indexer_view';

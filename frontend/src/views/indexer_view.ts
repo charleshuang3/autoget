@@ -1,7 +1,7 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
-import { type Category, fetchIndexerCategories } from '../utils/api';
+import { type Category, fetchIndexerCategories, fetchIndexerResources, type ResourcesResponse } from '../utils/api';
 import '../components/navbar.ts';
 import globalStyles from '/src/index.css?inline';
 
@@ -25,6 +25,9 @@ export class IndexerView extends LitElement {
 
   @state()
   private categories: Category[] = [];
+
+  @state()
+  private resources: ResourcesResponse | null = null;
 
   @property({ type: String })
   public category: string = '';
@@ -52,17 +55,30 @@ export class IndexerView extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     await this.fetchIndexerCategories();
+    await this.fetchIndexerResources();
   }
 
   protected update(changedProperties: PropertyValues): void {
     if (changedProperties.has('indexerId')) {
       this.fetchIndexerCategories();
+      this.fetchIndexerResources();
+    }
+    if (changedProperties.has('category')) {
+      this.fetchIndexerResources();
     }
     super.update(changedProperties);
   }
 
   private async fetchIndexerCategories() {
     this.categories = await fetchIndexerCategories(this.indexerId);
+  }
+
+  private async fetchIndexerResources() {
+    if (this.indexerId && this.category) {
+      this.resources = await fetchIndexerResources(this.indexerId, this.category, 1);
+    } else {
+      this.resources = null;
+    }
   }
 
   render() {
@@ -77,7 +93,13 @@ export class IndexerView extends LitElement {
             </ul>
           </div>
 
-          <div class="flex-10 p-4 overflow-y-auto" id="content">Indexer View: ${this.indexerId}</div>
+          <div class="flex-10 p-4 overflow-y-auto" id="content">
+            Indexer View: ${this.indexerId}
+            <p>Category: ${this.category}</p>
+            ${this.resources
+              ? html`<p>Total Resources: ${this.resources.pagination.total}</p>`
+              : html`<p>No resources found or loading...</p>`}
+          </div>
         </div>
       </div>
     `;
