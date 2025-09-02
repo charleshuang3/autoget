@@ -13,7 +13,7 @@ require (
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.34.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
