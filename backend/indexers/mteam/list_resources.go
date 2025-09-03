@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
@@ -244,7 +246,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 
 		images := []string{}
 		if len(item.ImageList) > 0 {
-			images = append(images, item.ImageList[0])
+			images = append(images, imageUseProxy(item.ImageList[0]))
 		}
 
 		ListResult.Resources = append(ListResult.Resources, indexers.ListResourceItem{
@@ -264,6 +266,18 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 	}
 
 	return ListResult, nil
+}
+
+const (
+	mteamImagePrefix = "https://img.m-team.cc/images/"
+)
+
+func imageUseProxy(u string) string {
+	if !strings.HasPrefix(u, mteamImagePrefix) {
+		return u
+	}
+
+	return "/api/v1/image?url=" + url.QueryEscape(u)
 }
 
 var (

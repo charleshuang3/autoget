@@ -62,6 +62,11 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 	leechers, _ := strconv.Atoi(resp.Data.Status.Leechers)
 	size, _ := strconv.ParseUint(resp.Data.Size, 10, 64)
 
+	images := []string{}
+	for _, img := range resp.Data.ImageList {
+		images = append(images, imageUseProxy(img))
+	}
+
 	res := &indexers.ResourceDetail{
 		ListResourceItem: indexers.ListResourceItem{
 			ID:          resp.Data.ID,
@@ -74,7 +79,7 @@ func (m *MTeam) Detail(id string, fileList bool) (*indexers.ResourceDetail, *err
 			Seeders:     uint32(seeders),
 			Leechers:    uint32(leechers),
 			DBs:         resp.Data.extractDBInfo(),
-			Images:      resp.Data.ImageList,
+			Images:      images,
 			Free:        resp.Data.Status.Discount == "FREE",
 		},
 		Mediainfo:   resp.Data.Mediainfo,

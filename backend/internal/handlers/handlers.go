@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"net/http"
+	"net/url"
 	"slices"
+	"strings"
 
 	"github.com/charleshuang3/autoget/backend/downloaders"
 	"github.com/charleshuang3/autoget/backend/indexers"
@@ -39,6 +42,8 @@ func (s *Service) SetupRouter(router *gin.RouterGroup) {
 	router.GET("/indexers/:indexer/registerSearch", s.indexerRegisterSearch)
 
 	router.GET("/downloaders", s.listDownloaders)
+
+	router.GET("/image", s.image)
 }
 
 func (s *Service) listIndexers(c *gin.Context) {
@@ -182,4 +187,35 @@ func (s *Service) listDownloaders(c *gin.Context) {
 		}
 	}
 	c.JSON(200, listDownloadersResp{Map: m})
+}
+
+func (s *Service) image(c *gin.Context) {
+	// m-team image require "referer" to request
+	u, ok := c.GetQuery("url")
+	if !ok {
+		c.JSON(400, gin.H{"error": "missing url query"})
+		return
+	}
+
+	u, _ = url.QueryUnescape(u)
+	if !strings.HasPrefix(u, "https://img.m-team.cc/images/") {
+		c.JSON(400, gin.H{"error": "invalid url"})
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.Header.Set("referer", "https://kp.m-team.cc/")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	defer resp.Body.Close()
+	c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
 }
