@@ -1,5 +1,6 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { DateTime } from 'luxon';
 
 import { type Category, fetchIndexerCategories, fetchIndexerResources, type ResourcesResponse } from '../utils/api';
 import '../components/navbar.ts';
@@ -67,6 +68,24 @@ export class IndexerView extends LitElement {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
+  private formatCreatedDate(timestamp: number): string {
+    const createdDate = DateTime.fromSeconds(timestamp, { zone: 'utc' });
+    const now = DateTime.now();
+    const diff = now.diff(createdDate, ['minutes', 'hours', 'days', 'weeks']).toObject();
+
+    if (diff.weeks && diff.weeks >= 1) {
+      return createdDate.toFormat('yyyy-MM-dd');
+    } else if (diff.days && diff.days >= 1) {
+      return `${Math.floor(diff.days)} day${Math.floor(diff.days) === 1 ? '' : 's'} ago`;
+    } else if (diff.hours && diff.hours >= 1) {
+      return `${Math.floor(diff.hours)} hour${Math.floor(diff.hours) === 1 ? '' : 's'} ago`;
+    } else if (diff.minutes && diff.minutes >= 1) {
+      return `${Math.floor(diff.minutes)} min${Math.floor(diff.minutes) === 1 ? '' : 's'} ago`;
+    } else {
+      return 'just now';
+    }
   }
 
   private renderCategory(category: Category): TemplateResult {
@@ -243,7 +262,17 @@ export class IndexerView extends LitElement {
                             ${resource.resolution
                               ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
                               : ''}
-                            ${resource.free ? html`<span class="badge badge-outline badge-success">Free</span>` : ''}
+                            ${resource.free ? html`<span class="badge badge-success">Free</span>` : ''}
+                            <span
+                              class="badge ${DateTime.now().diff(
+                                DateTime.fromSeconds(resource.createdDate, { zone: 'utc' }),
+                                'weeks',
+                              ).weeks < 1
+                                ? 'badge-accent'
+                                : 'badge-neutral'}"
+                              >${this.formatCreatedDate(resource.createdDate)}</span
+                            >
+                            <span class="badge badge-info">↑${resource.seeders}</span>
                           </div>
                         </div>
                       </div>
