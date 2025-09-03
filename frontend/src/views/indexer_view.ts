@@ -248,15 +248,17 @@ export class IndexerView extends LitElement {
                             />`
                           : ''}
                         <div class="p-2">
-                          <h3 class="text font-medium line-clamp-4 text-balance break-all">
+                          <h3 class="text font-medium line-clamp-4 text-balance break-all border-b-1 border-b-gray-400">
                             ${resource.title || 'Untitled Resource'}
                           </h3>
                           ${resource.title2
-                            ? html`<p class="text font-normal line-clamp-4 text-balance break-all">
+                            ? html`<p
+                                class="text font-normal line-clamp-4 text-balance break-all border-b-1 border-b-gray-400"
+                              >
                                 ${resource.title2}
                               </p>`
                             : ''}
-                          <div class="flex flex-wrap gap-1 mt-1">
+                          <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
                             <span class="badge badge-outline badge-primary">${resource.category}</span>
                             <span class="badge badge-outline badge-secondary">${this.formatBytes(resource.size)}</span>
                             ${resource.resolution
@@ -273,6 +275,9 @@ export class IndexerView extends LitElement {
                               >${this.formatCreatedDate(resource.createdDate)}</span
                             >
                             <span class="badge badge-info">↑${resource.seeders}</span>
+                          </div>
+                          <div class="flex flex-row basis-full justify-end">
+                            <button class="btn btn-xs btn-info">Download</button>
                           </div>
                         </div>
                       </div>
