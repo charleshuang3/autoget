@@ -51,6 +51,24 @@ export class IndexerView extends LitElement {
   @property({ type: String })
   public category: string = '';
 
+  @property({ type: Number })
+  public currentPage: number = 1;
+
+  @state()
+  private totalPages: number = 1;
+
+  private formatBytes(bytes: number, decimals: number = 2): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
   private renderCategory(category: Category): TemplateResult {
     const isActive = this.category === category.id;
     const activeClass = isActive ? 'menu-active' : '';
@@ -79,10 +97,18 @@ export class IndexerView extends LitElement {
 
   protected async update(changedProperties: PropertyValues): Promise<void> {
     if (changedProperties.has('indexerId')) {
+      this.resources = null;
+      this.currentPage = 1; // Reset page when indexerId changes
       await this.fetchIndexerCategories();
       await this.fetchIndexerResources();
     }
     if (changedProperties.has('category')) {
+      this.resources = null;
+      this.currentPage = 1; // Reset page when category changes
+      this.fetchIndexerResources();
+    }
+    if (changedProperties.has('currentPage')) {
+      this.resources = null;
       this.fetchIndexerResources();
     }
     super.update(changedProperties);
@@ -93,12 +119,84 @@ export class IndexerView extends LitElement {
   }
 
   private async fetchIndexerResources() {
-    this.resources = null;
     if (this.indexerId && this.category) {
-      this.resources = await fetchIndexerResources(this.indexerId, this.category, 1);
+      const response = await fetchIndexerResources(this.indexerId, this.category, this.currentPage);
+      if (response) {
+        this.resources = response;
+        this.totalPages = response.pagination.totalPages;
+      } else {
+        this.resources = null;
+        this.totalPages = 1;
+      }
     } else {
       this.resources = null;
+      this.totalPages = 1;
     }
+  }
+
+  private handlePageChange(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  private renderPagination(): TemplateResult | null {
+    if (this.totalPages <= 1) {
+      return null;
+    }
+
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5;
+    const half = Math.floor(maxPagesToShow / 2);
+
+    let startPage = Math.max(1, this.currentPage - half);
+    let endPage = Math.min(this.totalPages, this.currentPage + half);
+
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      if (this.currentPage <= half) {
+        endPage = Math.min(this.totalPages, maxPagesToShow);
+      } else if (this.currentPage + half >= this.totalPages) {
+        startPage = Math.max(1, this.totalPages - maxPagesToShow + 1);
+      }
+    }
+
+    if (startPage > 1) {
+      pages.push('<');
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (endPage < this.totalPages) {
+      pages.push('>');
+    }
+
+    return html`
+      <div class="flex justify-center my-4">
+        <div class="join">
+          ${pages.map((page) => {
+            const isActive = page === this.currentPage;
+            const isDisabled =
+              (page === '<' && this.currentPage === 1) || (page === '>' && this.currentPage === this.totalPages);
+            const buttonClass = `join-item btn ${isActive ? 'btn-active' : ''} ${isDisabled ? 'btn-disabled' : ''}`;
+
+            if (typeof page === 'number') {
+              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(page)}>${page}</button>`;
+            } else if (page === '<') {
+              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.currentPage - 1)}>
+                &laquo;
+              </button>`;
+            } else if (page === '>') {
+              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.currentPage + 1)}>
+                &raquo;
+              </button>`;
+            }
+            return null;
+          })}
+        </div>
+      </div>
+    `;
   }
 
   render() {
@@ -114,11 +212,7 @@ export class IndexerView extends LitElement {
           </div>
 
           <div class="flex-10 p-4 overflow-y-auto" id="content">
-            <header class="text-center mb-12">
-              <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">${this.indexerId} Resources</h1>
-              <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">Category: ${this.category}</p>
-            </header>
-
+            ${this.renderPagination()}
             <div id="masonry-container" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2">
               ${this.resources && this.resources.resources && this.resources.resources.length > 0
                 ? this.resources.resources.map(
@@ -134,14 +228,29 @@ export class IndexerView extends LitElement {
                               loading="lazy"
                             />`
                           : ''}
-                        <div class="p-4">
-                          <h3 class="text font-medium">${resource.title || 'Untitled Resource'}</h3>
+                        <div class="p-2">
+                          <h3 class="text font-medium line-clamp-4 text-balance break-all">
+                            ${resource.title || 'Untitled Resource'}
+                          </h3>
+                          ${resource.title2
+                            ? html`<p class="text font-normal line-clamp-4 text-balance break-all">
+                                ${resource.title2}
+                              </p>`
+                            : ''}
+                          <div class="flex flex-wrap gap-1 mt-2">
+                            <span class="badge badge-outline badge-primary">${resource.category}</span>
+                            <span class="badge badge-outline badge-secondary">${this.formatBytes(resource.size)}</span>
+                            ${resource.resolution
+                              ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
+                              : ''}
+                          </div>
                         </div>
                       </div>
                     `,
                   )
                 : html`<p>No resources found or loading...</p>`}
             </div>
+            ${this.renderPagination()}
           </div>
         </div>
       </div>
