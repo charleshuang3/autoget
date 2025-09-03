@@ -17,6 +17,25 @@ export class IndexerView extends LitElement {
       #left-panel-categories li a {
         padding-left: 0.5rem;
       }
+
+      body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      body::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+
+      body::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+        border-radius: 20px;
+        border: 2px solid #1f2937;
+      }
+
+      /* To prevent items from splitting across columns */
+      .break-inside-avoid-column {
+        break-inside: avoid-column;
+      }
     `,
   ];
 
@@ -58,10 +77,10 @@ export class IndexerView extends LitElement {
     await this.fetchIndexerResources();
   }
 
-  protected update(changedProperties: PropertyValues): void {
+  protected async update(changedProperties: PropertyValues): Promise<void> {
     if (changedProperties.has('indexerId')) {
-      this.fetchIndexerCategories();
-      this.fetchIndexerResources();
+      await this.fetchIndexerCategories();
+      await this.fetchIndexerResources();
     }
     if (changedProperties.has('category')) {
       this.fetchIndexerResources();
@@ -74,6 +93,7 @@ export class IndexerView extends LitElement {
   }
 
   private async fetchIndexerResources() {
+    this.resources = null;
     if (this.indexerId && this.category) {
       this.resources = await fetchIndexerResources(this.indexerId, this.category, 1);
     } else {
@@ -94,11 +114,34 @@ export class IndexerView extends LitElement {
           </div>
 
           <div class="flex-10 p-4 overflow-y-auto" id="content">
-            Indexer View: ${this.indexerId}
-            <p>Category: ${this.category}</p>
-            ${this.resources
-              ? html`<p>Total Resources: ${this.resources.pagination.total}</p>`
-              : html`<p>No resources found or loading...</p>`}
+            <header class="text-center mb-12">
+              <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">${this.indexerId} Resources</h1>
+              <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">Category: ${this.category}</p>
+            </header>
+
+            <div id="masonry-container" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2">
+              ${this.resources && this.resources.resources && this.resources.resources.length > 0
+                ? this.resources.resources.map(
+                    (resource) => html`
+                      <div
+                        class="image-card rounded-lg overflow-hidden shadow-lg border border-gray-700 bg-gray-100 break-inside-avoid-column mb-2"
+                      >
+                        ${resource.images && resource.images.length > 0
+                          ? html`<img
+                              src="${resource.images[0]}"
+                              alt="${resource.title || 'Resource image'}"
+                              class="w-full h-auto object-cover rounded-lg"
+                              loading="lazy"
+                            />`
+                          : ''}
+                        <div class="p-4">
+                          <h3 class="text font-medium">${resource.title || 'Untitled Resource'}</h3>
+                        </div>
+                      </div>
+                    `,
+                  )
+                : html`<p>No resources found or loading...</p>`}
+            </div>
           </div>
         </div>
       </div>
