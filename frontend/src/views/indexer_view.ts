@@ -237,12 +237,13 @@ export class IndexerView extends LitElement {
                                 ${resource.title2}
                               </p>`
                             : ''}
-                          <div class="flex flex-wrap gap-1 mt-2">
+                          <div class="flex flex-wrap gap-1 mt-1">
                             <span class="badge badge-outline badge-primary">${resource.category}</span>
                             <span class="badge badge-outline badge-secondary">${this.formatBytes(resource.size)}</span>
                             ${resource.resolution
                               ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
                               : ''}
+                            ${resource.free ? html`<span class="badge badge-outline badge-success">Free</span>` : ''}
                           </div>
                         </div>
                       </div>

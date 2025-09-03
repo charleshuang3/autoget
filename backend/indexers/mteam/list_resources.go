@@ -53,29 +53,40 @@ type searchResponseItem struct {
 	Anonymous        bool     `json:"anonymous"`
 	InfoHash         string   `json:"infoHash"`
 	Status           struct {
-		ID               string      `json:"id"`
-		CreatedDate      string      `json:"createdDate"`
-		LastModifiedDate string      `json:"lastModifiedDate"`
-		PickType         string      `json:"pickType"`
-		ToppingLevel     string      `json:"toppingLevel"`
-		ToppingEndTime   string      `json:"toppingEndTime"`
-		Discount         string      `json:"discount"`
-		DiscountEndTime  string      `json:"discountEndTime"`
-		TimesCompleted   string      `json:"timesCompleted"`
-		Comments         string      `json:"comments"`
-		LastAction       string      `json:"lastAction"`
-		LastSeederAction string      `json:"lastSeederAction"`
-		Views            string      `json:"views"`
-		Hits             string      `json:"hits"`
-		Support          string      `json:"support"`
-		Oppose           string      `json:"oppose"`
-		Status           string      `json:"status"`
-		Seeders          string      `json:"seeders"`
-		Leechers         string      `json:"leechers"`
-		Banned           bool        `json:"banned"`
-		Visible          bool        `json:"visible"`
-		PromotionRule    interface{} `json:"promotionRule"`  // never seen
-		MallSingleFree   interface{} `json:"mallSingleFree"` // unused
+		ID               string `json:"id"`
+		CreatedDate      string `json:"createdDate"`
+		LastModifiedDate string `json:"lastModifiedDate"`
+		PickType         string `json:"pickType"`
+		ToppingLevel     string `json:"toppingLevel"`
+		ToppingEndTime   string `json:"toppingEndTime"`
+		Discount         string `json:"discount"`
+		DiscountEndTime  string `json:"discountEndTime"`
+		TimesCompleted   string `json:"timesCompleted"`
+		Comments         string `json:"comments"`
+		LastAction       string `json:"lastAction"`
+		LastSeederAction string `json:"lastSeederAction"`
+		Views            string `json:"views"`
+		Hits             string `json:"hits"`
+		Support          string `json:"support"`
+		Oppose           string `json:"oppose"`
+		Status           string `json:"status"`
+		Seeders          string `json:"seeders"`
+		Leechers         string `json:"leechers"`
+		Banned           bool   `json:"banned"`
+		Visible          bool   `json:"visible"`
+		PromotionRule    struct {
+			CreatedDate      string        `json:"createdDate"`
+			LastModifiedDate string        `json:"lastModifiedDate"`
+			ID               string        `json:"id"`
+			Categories       []interface{} `json:"categories"`
+			Teams            []interface{} `json:"teams"`
+			Discount         string        `json:"discount"`
+			StartTime        string        `json:"startTime"`
+			EndTime          string        `json:"endTime"`
+			OperatorID       string        `json:"operatorId"`
+			Operator         string        `json:"operator"`
+		} `json:"promotionRule"`
+		MallSingleFree interface{} `json:"mallSingleFree"` // unused
 	} `json:"status"`
 	DmmInfo struct {
 		CreatedDate      string   `json:"createdDate"`
@@ -248,7 +259,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 			Leechers:    uint32(leechers),
 			DBs:         item.extractDBInfo(),
 			Images:      images,
-			Free:        item.Status.Discount == "FREE",
+			Free:        item.Status.PromotionRule.Discount == "FREE",
 		})
 	}
 
