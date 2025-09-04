@@ -4,7 +4,7 @@ import 'iconify-icon';
 
 import { type Category, fetchIndexerCategories } from '../utils/api';
 import '../components/navbar.ts';
-import '../components/resource_list.ts'; // Import the new component
+import '../components/resource_list.ts';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('indexer-view')
