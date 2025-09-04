@@ -1,6 +1,7 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { DateTime } from 'luxon';
+import 'iconify-icon';
 
 import { type Category, fetchIndexerCategories, fetchIndexerResources, type ResourcesResponse } from '../utils/api';
 import '../components/navbar.ts';
@@ -272,9 +273,14 @@ export class IndexerView extends LitElement {
                               ).weeks < 1
                                 ? 'badge-accent'
                                 : 'badge-neutral'}"
-                              >${this.formatCreatedDate(resource.createdDate)}</span
-                            >
-                            <span class="badge badge-info">↑${resource.seeders}</span>
+                              >
+                              <iconify-icon icon="mingcute:time-line"></iconify-icon>
+                              ${this.formatCreatedDate(resource.createdDate)}
+                            </span>
+                            <span class="badge badge-info">
+                              <iconify-icon icon="icons8:up-round"></iconify-icon>
+                              ${resource.seeders}
+                            </span>
                           </div>
                           <div class="flex flex-row basis-full justify-end">
                             <button class="btn btn-xs btn-info">Download</button>
