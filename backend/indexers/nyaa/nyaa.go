@@ -201,13 +201,34 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 	page = strings.TrimSpace(page)                    // Trim leading/trailing whitespace
 	currentPage, _ := strconv.Atoi(page)
 
+	var totalPages int
+	// The last page number is usually in the second to last `li` element.
+	lastPageLi := doc.Find("ul.pagination li").Eq(-2)
+	if lastPageLi.Length() > 0 {
+		totalPages, _ = strconv.Atoi(lastPageLi.Text())
+	}
+
+	if currentPage == 0 && len(resources) > 0 {
+		currentPage = 1
+	}
+
+	if totalPages == 0 && len(resources) > 0 {
+		// if no total pages, but we have resources, there must be at least one page
+		totalPages = 1
+	}
+
+	if totalPages < currentPage {
+		// if total pages is less than current page, it means we failed to parse it
+		// (e.g. `...`), so we just assume total pages is at least current page
+		totalPages = currentPage
+	}
+
 	listResult := &indexers.ListResult{
 		Pagination: indexers.Pagination{
-			Page: uint32(currentPage),
-			// Nyaa does not provide following information
-			TotalPages: 0,
+			Page:       uint32(currentPage),
+			TotalPages: uint32(totalPages),
 			PageSize:   defaultPageSize,
-			Total:      0,
+			Total:      0, // Nyaa does not provide total items
 		},
 		Resources: resources,
 	}

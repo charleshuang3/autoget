@@ -273,6 +273,8 @@ const (
 )
 
 func imageUseProxy(u string) string {
+	// Sometimes it response img in http://img.m-team.cc
+	u = strings.ReplaceAll(u, "http://img.m-team.cc", "https://img.m-team.cc")
 	if !strings.HasPrefix(u, mteamImagePrefix) {
 		return u
 	}
