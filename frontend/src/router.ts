@@ -60,7 +60,11 @@ export class AppRouter extends LitElement {
       render: ({ id, category }) => {
         const urlParams = new URLSearchParams(window.location.search);
         const page = urlParams.get('page');
-        return html`<indexer-view .indexerId=${id || ''} .category=${category || ''} .page=${page ? Number(page) : 1}></indexer-view>`;
+        return html`<indexer-view
+          .indexerId=${id || ''}
+          .category=${category || ''}
+          .page=${page ? Number(page) : 1}
+        ></indexer-view>`;
       },
     },
     { path: '*', render: () => html`<not-found-view></not-found-view>` },

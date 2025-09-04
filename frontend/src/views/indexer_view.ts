@@ -5,6 +5,7 @@ import 'iconify-icon';
 import { type Category, fetchIndexerCategories } from '../utils/api';
 import '../components/navbar.ts';
 import '../components/resource_list.ts';
+import { scrollableOnScroll } from '../utils/scroll_to_top';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('indexer-view')
@@ -101,7 +102,11 @@ export class IndexerView extends LitElement {
             </ul>
           </div>
 
-          <div class="flex-10 p-4 overflow-y-auto" id="content">
+          <div
+            class="flex-10 p-4 overflow-y-auto"
+            id="content"
+            @scroll=${(e: Event) => scrollableOnScroll(e.currentTarget as HTMLElement)}
+          >
             <resource-list .indexerId=${this.indexerId} .category=${this.category} .page=${this.page}></resource-list>
           </div>
         </div>

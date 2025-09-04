@@ -133,8 +133,7 @@ export class ResourceList extends LitElement {
         <div class="join">
           ${pages.map((page) => {
             const isActive = page === this.page;
-            const isDisabled =
-              (page === '<' && this.page === 1) || (page === '>' && this.page === this.totalPages);
+            const isDisabled = (page === '<' && this.page === 1) || (page === '>' && this.page === this.totalPages);
             const buttonClass = `join-item btn ${isActive ? 'btn-active' : ''} ${isDisabled ? 'btn-disabled' : ''}`;
 
             if (typeof page === 'number') {
