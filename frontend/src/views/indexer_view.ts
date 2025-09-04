@@ -50,6 +50,9 @@ export class IndexerView extends LitElement {
   @property({ type: String })
   public category: string = '';
 
+  @property({ type: Number })
+  public page: number = 1;
+
   private renderCategory(category: Category): TemplateResult {
     const isActive = this.category === category.id;
     const activeClass = isActive ? 'menu-active' : '';
@@ -99,7 +102,7 @@ export class IndexerView extends LitElement {
           </div>
 
           <div class="flex-10 p-4 overflow-y-auto" id="content">
-            <resource-list .indexerId=${this.indexerId} .category=${this.category}></resource-list>
+            <resource-list .indexerId=${this.indexerId} .category=${this.category} .page=${this.page}></resource-list>
           </div>
         </div>
       </div>

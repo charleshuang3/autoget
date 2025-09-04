@@ -24,11 +24,11 @@ export class ResourceList extends LitElement {
   @property({ type: String })
   public category: string = '';
 
-  @state()
-  private resources: ResourcesResponse | null = null;
+  @property({ type: Number })
+  public page: number = 1;
 
   @state()
-  private currentPage: number = 1;
+  private resources: ResourcesResponse | null = null;
 
   @state()
   private totalPages: number = 1;
@@ -63,43 +63,17 @@ export class ResourceList extends LitElement {
     }
   }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.updateCurrentPageFromUrl(); // This will set currentPage and trigger an update cycle
-    window.addEventListener('popstate', this.updateCurrentPageFromUrl);
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener('popstate', this.updateCurrentPageFromUrl);
-    super.disconnectedCallback();
-  }
-
   protected async update(changedProperties: PropertyValues): Promise<void> {
     super.update(changedProperties);
 
-    let shouldFetchResources = false;
-
-    if (changedProperties.has('indexerId') || changedProperties.has('category')) {
-      shouldFetchResources = true;
-      this.updateCurrentPageFromUrl();
-    } else if (changedProperties.has('currentPage')) {
-      shouldFetchResources = true;
-    }
-
-    if (shouldFetchResources) {
+    if (changedProperties.has('indexerId') || changedProperties.has('category') || changedProperties.has('page')) {
       await this.fetchIndexerResources();
     }
   }
 
-  private updateCurrentPageFromUrl = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get('page');
-    this.currentPage = page ? Number(page) : 1;
-  };
-
   private async fetchIndexerResources() {
     if (this.indexerId && this.category) {
-      const response = await fetchIndexerResources(this.indexerId, this.category, this.currentPage);
+      const response = await fetchIndexerResources(this.indexerId, this.category, this.page);
       if (response) {
         this.resources = response;
         this.totalPages = response.pagination.totalPages;
@@ -115,10 +89,10 @@ export class ResourceList extends LitElement {
 
   private handlePageChange(page: number) {
     if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
       const url = new URL(window.location.href);
       url.searchParams.set('page', page.toString());
       window.history.pushState({}, '', url.toString());
+      window.dispatchEvent(new PopStateEvent('popstate'));
     }
   }
 
@@ -131,13 +105,13 @@ export class ResourceList extends LitElement {
     const maxPagesToShow = 5;
     const half = Math.floor(maxPagesToShow / 2);
 
-    let startPage = Math.max(1, this.currentPage - half);
-    let endPage = Math.min(this.totalPages, this.currentPage + half);
+    let startPage = Math.max(1, this.page - half);
+    let endPage = Math.min(this.totalPages, this.page + half);
 
     if (endPage - startPage + 1 < maxPagesToShow) {
-      if (this.currentPage <= half) {
+      if (this.page <= half) {
         endPage = Math.min(this.totalPages, maxPagesToShow);
-      } else if (this.currentPage + half >= this.totalPages) {
+      } else if (this.page + half >= this.totalPages) {
         startPage = Math.max(1, this.totalPages - maxPagesToShow + 1);
       }
     }
@@ -158,19 +132,19 @@ export class ResourceList extends LitElement {
       <div class="flex justify-center my-4">
         <div class="join">
           ${pages.map((page) => {
-            const isActive = page === this.currentPage;
+            const isActive = page === this.page;
             const isDisabled =
-              (page === '<' && this.currentPage === 1) || (page === '>' && this.currentPage === this.totalPages);
+              (page === '<' && this.page === 1) || (page === '>' && this.page === this.totalPages);
             const buttonClass = `join-item btn ${isActive ? 'btn-active' : ''} ${isDisabled ? 'btn-disabled' : ''}`;
 
             if (typeof page === 'number') {
               return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(page)}>${page}</button>`;
             } else if (page === '<') {
-              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.currentPage - 1)}>
+              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.page - 1)}>
                 &laquo;
               </button>`;
             } else if (page === '>') {
-              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.currentPage + 1)}>
+              return html`<button class="${buttonClass}" @click=${() => this.handlePageChange(this.page + 1)}>
                 &raquo;
               </button>`;
             }
