@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import 'iconify-icon';
 
 import { fetchIndexerResources, type ResourcesResponse } from '../utils/api';
+import { formatBytes, formatCreatedDate } from '../utils/format';
 import globalStyles from '/src/index.css?inline';
 
 @customElement('resource-list')
@@ -32,36 +33,6 @@ export class ResourceList extends LitElement {
 
   @state()
   private totalPages: number = 1;
-
-  private formatBytes(bytes: number, decimals: number = 2): string {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  }
-
-  private formatCreatedDate(timestamp: number): string {
-    const createdDate = DateTime.fromSeconds(timestamp, { zone: 'utc' });
-    const now = DateTime.now();
-    const diff = now.diff(createdDate, ['minutes', 'hours', 'days', 'weeks']).toObject();
-
-    if (diff.weeks && diff.weeks >= 1) {
-      return createdDate.toFormat('yyyy-MM-dd');
-    } else if (diff.days && diff.days >= 1) {
-      return `${Math.floor(diff.days)} day${Math.floor(diff.days) === 1 ? '' : 's'} ago`;
-    } else if (diff.hours && diff.hours >= 1) {
-      return `${Math.floor(diff.hours)} hour${Math.floor(diff.hours) === 1 ? '' : 's'} ago`;
-    } else if (diff.minutes && diff.minutes >= 1) {
-      return `${Math.floor(diff.minutes)} min${Math.floor(diff.minutes) === 1 ? '' : 's'} ago`;
-    } else {
-      return 'just now';
-    }
-  }
 
   protected async update(changedProperties: PropertyValues): Promise<void> {
     super.update(changedProperties);
@@ -185,7 +156,7 @@ export class ResourceList extends LitElement {
                       : ''}
                     <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
                       <span class="badge badge-outline badge-primary">${resource.category}</span>
-                      <span class="badge badge-outline badge-secondary">${this.formatBytes(resource.size)}</span>
+                      <span class="badge badge-outline badge-secondary">${formatBytes(resource.size)}</span>
                       ${resource.resolution
                         ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
                         : ''}
@@ -199,7 +170,7 @@ export class ResourceList extends LitElement {
                           : 'badge-neutral'}"
                       >
                         <iconify-icon icon="mingcute:time-line"></iconify-icon>
-                        ${this.formatCreatedDate(resource.createdDate)}
+                        ${formatCreatedDate(resource.createdDate)}
                       </span>
                       <span class="badge badge-info">
                         <iconify-icon icon="icons8:up-round"></iconify-icon>
