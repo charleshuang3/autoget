@@ -13,7 +13,7 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 }
 
 export function formatCreatedDate(timestamp: number): string {
-  const createdDate = DateTime.fromSeconds(timestamp, { zone: 'utc' });
+  const createdDate = DateTime.fromSeconds(timestamp);
   const now = DateTime.now();
   const diff = now.diff(createdDate, ['minutes', 'hours', 'days', 'weeks']).toObject();
 
