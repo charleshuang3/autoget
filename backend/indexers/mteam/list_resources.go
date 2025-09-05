@@ -153,6 +153,13 @@ type searchResponse struct {
 }
 
 func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *errors.HTTPStatusError) {
+	if listReq.Category == "" {
+		listReq.Category = categoryNormal
+		if m.mType == MTeamTypeAdult {
+			listReq.Category = categoryAdult
+		}
+	}
+
 	// check category is known.
 	cat, ok := m.prefetched.Categories.Infos[listReq.Category]
 	if !ok {
