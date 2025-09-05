@@ -58,9 +58,6 @@ export class SearchView extends LitElement {
   private selectedCategoryPath: Category[] = []; // Path of selected categories
 
   @state()
-  private finalSelectedCategory: Category | null = null; // The leaf category selected
-
-  @state()
   private searchQuery = '';
 
   async connectedCallback() {
@@ -72,7 +69,6 @@ export class SearchView extends LitElement {
     const radio = e.target as HTMLInputElement;
     this.selectedIndexer = radio.value;
     this.selectedCategoryPath = [];
-    this.finalSelectedCategory = null;
     await this.fetchAndDisplayCategories();
   }
 
@@ -91,7 +87,7 @@ export class SearchView extends LitElement {
     console.log({
       query: this.searchQuery,
       indexer: this.selectedIndexer,
-      selectedCategory: this.finalSelectedCategory?.id,
+      selectedCategory: this.selectedCategoryPath[this.selectedCategoryPath.length - 1]?.id,
       selectedCategoryPath: this.selectedCategoryPath.map((c) => c.id),
     });
   }
@@ -105,14 +101,12 @@ export class SearchView extends LitElement {
     this.selectedCategoryPath = this.selectedCategoryPath.slice(0, level);
     this.selectedCategoryPath.push(category);
 
-    // Determine if this is a final selection or if there are subcategories
+    // Determine if there are subcategories
     if (category.subCategories && category.subCategories.length > 0) {
-      this.finalSelectedCategory = null; // Not a final selection yet
       // Add the next level of categories to display
       this.displayedCategoryLevels = this.displayedCategoryLevels.slice(0, level + 1);
       this.displayedCategoryLevels.push(category.subCategories);
     } else {
-      this.finalSelectedCategory = category; // This is a leaf category
       // Hide subsequent levels if a leaf node is selected
       this.displayedCategoryLevels = this.displayedCategoryLevels.slice(0, level + 1);
     }
@@ -193,9 +187,9 @@ export class SearchView extends LitElement {
 
           ${this.selectedIndexer
             ? html`
-                <div class="mt-8 text-center">
+                <div class="mt-2 text-center">
                   <p id="selected-path" class="text text-indigo-500 mt-1">
-                    ${this.selectedIndexer} > ${this.selectedCategoryPath.map((c) => c.name).join(' > ')}
+                    ${this.selectedIndexer} / ${this.selectedCategoryPath.map((c) => c.name).join(' > ')}
                   </p>
                 </div>
               `
