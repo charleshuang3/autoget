@@ -23,12 +23,12 @@ func TestCategories(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	}, "", nil, nil)
+	}, MTeamTypeNormal, "", nil, nil)
 	require.NotNil(t, m)
 
 	got, err := m.Categories()
 	require.Nil(t, err)
-	assert.Len(t, got, 2)
+	assert.Len(t, got, 1)
 }
 
 func TestList(t *testing.T) {
@@ -38,7 +38,7 @@ func TestList(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	}, "", nil, nil)
+	}, MTeamTypeNormal, "", nil, nil)
 	require.NotNil(t, m)
 
 	tests := []struct {
@@ -145,7 +145,7 @@ func TestDetail(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	}, "", nil, nil)
+	}, MTeamTypeNormal, "", nil, nil)
 	require.NotNil(t, m)
 
 	res, err := m.Detail("947796", true)
@@ -161,7 +161,7 @@ func TestDownload(t *testing.T) {
 	dir := t.TempDir()
 	m := NewMTeam(&Config{
 		APIKey: apiKey,
-	}, dir, nil, nil)
+	}, MTeamTypeNormal, dir, nil, nil)
 	require.NotNil(t, m)
 
 	res, err := m.Download("947796")

@@ -51,8 +51,17 @@ func (c *Config) getBaseURL() string {
 	return c.BaseURL
 }
 
+type MTeamType int
+
+const (
+	MTeamTypeNormal MTeamType = iota
+	MTeamTypeAdult
+)
+
 type MTeam struct {
 	indexers.IndexerBasicInfo
+
+	mType MTeamType
 
 	config *Config
 	db     *gorm.DB
@@ -64,12 +73,19 @@ type MTeam struct {
 	torrentsDir string
 }
 
-func NewMTeam(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *MTeam {
+func NewMTeam(config *Config, mType MTeamType, torrentsDir string, db *gorm.DB, notify notify.INotifier) *MTeam {
 	if config.APIKey == "" {
 		return nil
 	}
+
+	n := name
+	if mType == MTeamTypeAdult {
+		n += ":adult"
+	}
+
 	m := &MTeam{
-		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(name, true),
+		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(n, true),
+		mType:            mType,
 		config:           config,
 		db:               db,
 		standards:        map[string]string{},
@@ -91,5 +107,9 @@ func NewMTeam(config *Config, torrentsDir string, db *gorm.DB, notify notify.INo
 }
 
 func (m *MTeam) Categories() ([]indexers.Category, *errors.HTTPStatusError) {
-	return m.prefetched.Categories.Tree, nil
+	if m.mType == MTeamTypeAdult {
+		return []indexers.Category{m.prefetched.Categories.Tree[1]}, nil
+	} else {
+		return []indexers.Category{m.prefetched.Categories.Tree[0]}, nil
+	}
 }

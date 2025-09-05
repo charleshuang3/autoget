@@ -23,7 +23,7 @@ func TestParseRSSItem(t *testing.T) {
 
 	m := NewMTeam(&Config{
 		APIKey: "api-key",
-	}, "", nil, nil)
+	}, MTeamTypeNormal, "", nil, nil)
 
 	got := m.ParseRSSItem(feed.Items[0])
 

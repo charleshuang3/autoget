@@ -61,19 +61,22 @@ func main() {
 
 	indexerMap := map[string]indexers.IIndexer{}
 	if cfg.MTeam != nil {
-		i := mteam.NewMTeam(cfg.MTeam, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db, tg)
-		i.RegisterRSSCronjob(cronjob)
-		indexerMap["m-team"] = i
+		normal := mteam.NewMTeam(cfg.MTeam, mteam.MTeamTypeNormal, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db, tg)
+		normal.RegisterRSSCronjob(cronjob)
+		indexerMap[normal.Name()] = normal
+
+		adult := mteam.NewMTeam(cfg.MTeam, mteam.MTeamTypeAdult, downloaderMap[cfg.MTeam.Downloader].TorrentsDir(), db, tg)
+		indexerMap[adult.Name()] = adult
 	}
 	if cfg.Nyaa != nil {
 		i := nyaa.NewClient(cfg.Nyaa, downloaderMap[cfg.Nyaa.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
-		indexerMap["nyaa"] = i
+		indexerMap[i.Name()] = i
 	}
 	if cfg.Sukebei != nil {
 		i := sukebei.NewClient(cfg.Sukebei, downloaderMap[cfg.Sukebei.Downloader].TorrentsDir(), db, tg)
 		i.RegisterRSSCronjob(cronjob)
-		indexerMap["sukebei"] = i
+		indexerMap[i.Name()] = i
 	}
 
 	service := handlers.NewService(cfg, db, indexerMap, downloaderMap)
