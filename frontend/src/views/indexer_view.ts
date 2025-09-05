@@ -79,10 +79,38 @@ export class IndexerView extends LitElement {
     await this.fetchIndexerCategories();
   }
 
+  private findCategoryName(id: string, categories: Category[]): string | null {
+    for (const category of categories) {
+      if (category.id === id) {
+        return category.name;
+      }
+      if (category.subCategories) {
+        const found = this.findCategoryName(id, category.subCategories);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
   protected async update(changedProperties: PropertyValues): Promise<void> {
     if (changedProperties.has('indexerId')) {
       await this.fetchIndexerCategories();
     }
+
+    if (this.indexerId) {
+      let title = 'AutoGet - ' + this.indexerId;
+      if (this.category && this.categories.length > 0) {
+        const categoryName = this.findCategoryName(this.category, this.categories);
+        if (categoryName) {
+          title += ` - ${categoryName}`;
+        }
+      }
+      title += ` - Page ${this.page}`;
+      document.title = title;
+    }
+
     super.update(changedProperties);
   }
 
