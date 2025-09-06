@@ -44,5 +44,30 @@ func TestCategories(t *testing.T) {
 		got[id] = category
 	})
 
-	assert.Equal(t, Categories, got)
+	want := map[string]indexers.Category{}
+
+	queue := []indexers.Category{}
+
+	// Initialize the queue with top-level categories from prefetcheddata.Categories
+	for _, cat := range Categories {
+		queue = append(queue, cat)
+	}
+
+	// Perform BFS
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:] // Dequeue
+
+		want[current.ID] = indexers.Category{
+			ID:   current.ID,
+			Name: current.Name,
+		}
+
+		// Enqueue subcategories
+		for _, subCat := range current.SubCategories {
+			queue = append(queue, subCat)
+		}
+	}
+
+	assert.Equal(t, want, got)
 }

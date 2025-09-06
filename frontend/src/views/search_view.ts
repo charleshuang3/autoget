@@ -145,10 +145,11 @@ export class SearchView extends LitElement {
     return html`
       <app-navbar activePage="search"></app-navbar>
       <div class="p-2 bg-slate-50 text-gray-800 flex flex-col items-center min-h-screen">
-        <div class="bg-white p-2 sm:p-10 rounded-2xl shadow-xl w-full max-w-6xl">
-          <form @submit=${this.handleSearch} class="mb-4">
+        <div class="bg-white p-1 sm:p-6 rounded-2xl shadow-xl w-full max-w-6xl">
+          <form @submit=${this.handleSearch} class="mb-2">
             <div class="join w-full">
               <input
+                name="search-query"
                 class="input input-bordered join-item w-full"
                 placeholder="Search"
                 .value=${this.searchQuery}
@@ -160,42 +161,43 @@ export class SearchView extends LitElement {
             </div>
           </form>
 
-          ${this.selectedIndexer
-            ? html`
-                <div class="mt-2 text-center">
-                  <div class="breadcrumbs text-sm">
-                    <ul>
-                      <li><a>${this.selectedIndexer}</a></li>
-                      ${this.selectedCategoryPath.map((c) => html`<li><a>${c.name}</a></li>`)}
-                    </ul>
-                  </div>
-                </div>
-              `
-            : ''}
+          <div class="collapse collapse-arrow mt-2">
+            <input type="checkbox" checked />
 
-          <div class="flex flex-row space-x-4">
-            <div class="flex-shrink-0 w-60 p-2 bg-gray-100 rounded-xl">
-              <h3 class="font-semibold text-gray-700 mb-3">Indexer</h3>
-              <div class="flex flex-col space-y-2">
-                ${this.indexers.map(
-                  (indexer) => html`
-                    <div
-                      class="category-item p-2 rounded-lg border border-gray-300 text-left font-medium flex items-center justify-between transition-colors bg-white hover:bg-gray-100 ${this
-                        .selectedIndexer === indexer
-                        ? 'active'
-                        : ''}"
-                      @click=${() => this.handleIndexerChange(indexer)}
-                    >
-                      <span>${indexer}</span>
-                      <span class="ml-2 text-gray-400 font-bold">›</span>
-                    </div>
-                  `,
-                )}
+            <div class="collapse-title p-0 pt-2 pb-2 flex flex-row gap-2">
+              <span class="p-2 text-sm">Searching in: </span>
+              <div class="breadcrumbs text-sm">
+                <ul>
+                  <li>${this.selectedIndexer}</li>
+                  ${this.selectedCategoryPath.map((c) => html`<li>${c.name}</li>`)}
+                </ul>
               </div>
             </div>
 
-            <div class="scroll-container overflow-x-auto flex space-x-4 pb-4 flex-grow">
-              ${this.displayedCategoryLevels.map((categories, index) => this.renderCategoryLevel(categories, index))}
+            <div class="collapse-content p-0 flex flex-row space-x-4">
+              <div class="flex-shrink-0 w-60 p-2 bg-gray-100 rounded-xl">
+                <h3 class="font-semibold text-gray-700 mb-3">Indexer</h3>
+                <div class="flex flex-col space-y-2">
+                  ${this.indexers.map(
+                    (indexer) => html`
+                      <div
+                        class="category-item p-2 rounded-lg border border-gray-300 text-left font-medium flex items-center justify-between transition-colors bg-white hover:bg-gray-100 ${this
+                          .selectedIndexer === indexer
+                          ? 'active'
+                          : ''}"
+                        @click=${() => this.handleIndexerChange(indexer)}
+                      >
+                        <span>${indexer}</span>
+                        <span class="ml-2 text-gray-400 font-bold">›</span>
+                      </div>
+                    `,
+                  )}
+                </div>
+              </div>
+
+              <div class="scroll-container overflow-x-auto flex space-x-4 pb-4 flex-grow">
+                ${this.displayedCategoryLevels.map((categories, index) => this.renderCategoryLevel(categories, index))}
+              </div>
             </div>
           </div>
         </div>
