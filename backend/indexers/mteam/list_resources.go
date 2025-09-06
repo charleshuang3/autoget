@@ -88,7 +88,20 @@ type searchResponseItem struct {
 			OperatorID       string        `json:"operatorId"`
 			Operator         string        `json:"operator"`
 		} `json:"promotionRule"`
-		MallSingleFree interface{} `json:"mallSingleFree"` // unused
+		MallSingleFree struct {
+			CreatedDate      string `json:"createdDate"`
+			LastModifiedDate string `json:"lastModifiedDate"`
+			ID               string `json:"id"`
+			Userid           string `json:"userid"`
+			Torrent          string `json:"torrent"`
+			IsAdult          bool   `json:"isAdult"`
+			Points           string `json:"points"`
+			FreeDay          string `json:"freeDay"`
+			Auction          string `json:"auction"`
+			StartDate        string `json:"startDate"`
+			EndDate          string `json:"endDate"`
+			Status           string `json:"status"`
+		} `json:"mallSingleFree"`
 	} `json:"status"`
 	DmmInfo struct {
 		CreatedDate      string   `json:"createdDate"`
@@ -252,9 +265,13 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 		size, _ := strconv.ParseUint(item.Size, 10, 64)
 
 		images := []string{}
-		if len(item.ImageList) > 0 {
-			images = append(images, imageUseProxy(item.ImageList[0]))
+		for _, img := range item.ImageList {
+			images = append(images, imageUseProxy(img))
 		}
+
+		isFree := item.Status.Status == "FREE" ||
+			item.Status.PromotionRule.Discount == "FREE" ||
+			item.Status.MallSingleFree.Status == "ONGOING"
 
 		ListResult.Resources = append(ListResult.Resources, indexers.ListResourceItem{
 			ID:          item.ID,
@@ -268,7 +285,8 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 			Leechers:    uint32(leechers),
 			DBs:         item.extractDBInfo(),
 			Images:      images,
-			Free:        item.Status.PromotionRule.Discount == "FREE",
+			Free:        isFree,
+			Labels:      item.LabelsNew,
 		})
 	}
 
