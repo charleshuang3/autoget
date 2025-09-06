@@ -65,9 +65,8 @@ export class SearchView extends LitElement {
     this.indexers = await fetchIndexers();
   }
 
-  private async handleIndexerChange(e: Event) {
-    const radio = e.target as HTMLInputElement;
-    this.selectedIndexer = radio.value;
+  private async handleIndexerChange(indexer: string) {
+    this.selectedIndexer = indexer;
     this.selectedCategoryPath = [];
     await this.fetchAndDisplayCategories();
   }
@@ -145,8 +144,8 @@ export class SearchView extends LitElement {
   render() {
     return html`
       <app-navbar activePage="search"></app-navbar>
-      <div class="p-4 bg-slate-50 text-gray-800 flex flex-col items-center min-h-screen">
-        <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl w-full max-w-5xl">
+      <div class="p-2 bg-slate-50 text-gray-800 flex flex-col items-center min-h-screen">
+        <div class="bg-white p-2 sm:p-10 rounded-2xl shadow-xl w-full max-w-6xl">
           <form @submit=${this.handleSearch} class="mb-4">
             <div class="join w-full">
               <input
@@ -161,39 +160,44 @@ export class SearchView extends LitElement {
             </div>
           </form>
 
-          <div class="mb-4">
-            <p class="text-gray-600 font-medium mb-2">Please choose an indexer:</p>
-            <div class="join">
-              ${this.indexers.map(
-                (indexer) => html`
-                  <input
-                    class="join-item btn"
-                    type="radio"
-                    name="indexer"
-                    aria-label=${indexer}
-                    .value=${indexer}
-                    .checked=${this.selectedIndexer === indexer}
-                    @change=${this.handleIndexerChange}
-                  />
-                `,
-              )}
-            </div>
-          </div>
-
-          <p class="text-gray-600 font-medium mb-2">Please choose an category:</p>
-          <div class="scroll-container overflow-x-auto flex space-x-4 pb-4">
-            ${this.displayedCategoryLevels.map((categories, index) => this.renderCategoryLevel(categories, index))}
-          </div>
-
           ${this.selectedIndexer
             ? html`
                 <div class="mt-2 text-center">
-                  <p id="selected-path" class="text text-indigo-500 mt-1">
-                    ${this.selectedIndexer} / ${this.selectedCategoryPath.map((c) => c.name).join(' > ')}
-                  </p>
+                  <div class="breadcrumbs text-sm">
+                    <ul>
+                      <li><a>${this.selectedIndexer}</a></li>
+                      ${this.selectedCategoryPath.map((c) => html`<li><a>${c.name}</a></li>`)}
+                    </ul>
+                  </div>
                 </div>
               `
             : ''}
+
+          <div class="flex flex-row space-x-4">
+            <div class="flex-shrink-0 w-60 p-2 bg-gray-100 rounded-xl">
+              <h3 class="font-semibold text-gray-700 mb-3">Indexer</h3>
+              <div class="flex flex-col space-y-2">
+                ${this.indexers.map(
+                  (indexer) => html`
+                    <div
+                      class="category-item p-2 rounded-lg border border-gray-300 text-left font-medium flex items-center justify-between transition-colors bg-white hover:bg-gray-100 ${this
+                        .selectedIndexer === indexer
+                        ? 'active'
+                        : ''}"
+                      @click=${() => this.handleIndexerChange(indexer)}
+                    >
+                      <span>${indexer}</span>
+                      <span class="ml-2 text-gray-400 font-bold">›</span>
+                    </div>
+                  `,
+                )}
+              </div>
+            </div>
+
+            <div class="scroll-container overflow-x-auto flex space-x-4 pb-4 flex-grow">
+              ${this.displayedCategoryLevels.map((categories, index) => this.renderCategoryLevel(categories, index))}
+            </div>
+          </div>
         </div>
       </div>
     `;
