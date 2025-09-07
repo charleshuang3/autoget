@@ -9,15 +9,7 @@ import globalStyles from '/src/index.css?inline';
 
 @customElement('resource-list')
 export class ResourceList extends LitElement {
-  static styles = [
-    unsafeCSS(globalStyles),
-    css`
-      /* To prevent items from splitting across columns */
-      .break-inside-avoid-column {
-        break-inside: avoid-column;
-      }
-    `,
-  ];
+  static styles = [unsafeCSS(globalStyles), css``];
 
   @property({ type: String })
   public indexerId: string = '';
@@ -33,6 +25,39 @@ export class ResourceList extends LitElement {
 
   @state()
   private totalPages: number = 1;
+
+  @state()
+  private columnCount: number = 1; // Default to 1 column
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('resize', this._handleResize);
+    this._handleResize(); // Initial call to set column count
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener('resize', this._handleResize);
+    super.disconnectedCallback();
+  }
+
+  private _handleResize = () => {
+    const width = window.innerWidth;
+    if (width >= 1280) {
+      // xl
+      this.columnCount = 5;
+    } else if (width >= 1024) {
+      // lg
+      this.columnCount = 4;
+    } else if (width >= 768) {
+      // md
+      this.columnCount = 3;
+    } else if (width >= 640) {
+      // sm
+      this.columnCount = 2;
+    } else {
+      this.columnCount = 1;
+    }
+  };
 
   protected async update(changedProperties: PropertyValues): Promise<void> {
     super.update(changedProperties);
@@ -65,6 +90,80 @@ export class ResourceList extends LitElement {
       window.history.pushState({}, '', url.toString());
       window.dispatchEvent(new PopStateEvent('popstate'));
     }
+  }
+
+  private renderResourceCard(resource: any): TemplateResult {
+    return html`
+      <div class="image-card rounded-lg overflow-hidden shadow-lg border border-gray-700 bg-gray-100 mb-2">
+        ${resource.images && resource.images.length > 0
+          ? html`<img
+              src="${resource.images[0]}"
+              alt="${resource.title || 'Resource image'}"
+              class="w-full h-auto object-cover rounded-lg"
+              loading="lazy"
+            />`
+          : ''}
+        <div class="p-2">
+          <h3 class="text font-medium line-clamp-4 text-balance break-all border-b-1 border-b-gray-400">
+            ${resource.title || 'Untitled Resource'}
+          </h3>
+          ${resource.title2
+            ? html`<p class="text font-normal line-clamp-4 text-balance break-all border-b-1 border-b-gray-400">
+                ${resource.title2}
+              </p>`
+            : ''}
+          <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
+            <span class="badge badge-outline badge-primary">${resource.category}</span>
+            <span class="badge badge-outline badge-secondary">${formatBytes(resource.size)}</span>
+            ${resource.resolution
+              ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
+              : ''}
+            ${resource.free ? html`<span class="badge badge-success">Free</span>` : ''}
+            <span
+              class="badge ${DateTime.now().diff(DateTime.fromSeconds(resource.createdDate, { zone: 'utc' }), 'weeks')
+                .weeks < 1
+                ? 'badge-accent'
+                : 'badge-neutral'}"
+            >
+              <iconify-icon icon="mingcute:time-line"></iconify-icon>
+              ${formatCreatedDate(resource.createdDate)}
+            </span>
+            <span class="badge badge-info">
+              <iconify-icon icon="icons8:up-round"></iconify-icon>
+              ${resource.seeders}
+            </span>
+          </div>
+          ${resource.labels && resource.labels.length > 0
+            ? html` <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
+                ${resource.labels.map(
+                  (label: string) => html` <span class="badge badge-outline badge-neutral">${label}</span> `,
+                )}
+              </div>`
+            : ''}
+          <div class="flex flex-row basis-full justify-end">
+            <button class="btn btn-xs btn-info">Download</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderColumns(): TemplateResult {
+    if (!this.resources || !this.resources.resources || this.resources.resources.length === 0) {
+      return html`<p>No resources found or loading...</p>`;
+    }
+
+    const columns: TemplateResult[][] = Array.from({ length: this.columnCount }, () => []);
+    this.resources.resources.forEach((resource, index) => {
+      const columnIndex = index % this.columnCount; // Distribute items in row-first order
+      columns[columnIndex].push(this.renderResourceCard(resource));
+    });
+
+    return html`
+      <div class="flex gap-2">
+        ${columns.map((colItems) => html` <div class="flex flex-col flex-grow gap-2">${colItems}</div> `)}
+      </div>
+    `;
   }
 
   private renderPagination(): TemplateResult | null {
@@ -128,74 +227,7 @@ export class ResourceList extends LitElement {
   render() {
     return html`
       ${this.renderPagination()}
-      <div id="masonry-container" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2">
-        ${this.resources && this.resources.resources && this.resources.resources.length > 0
-          ? this.resources.resources.map(
-              (resource) => html`
-                <div
-                  class="image-card rounded-lg overflow-hidden shadow-lg border border-gray-700 bg-gray-100 break-inside-avoid-column mb-2"
-                >
-                  ${resource.images && resource.images.length > 0
-                    ? html`<img
-                        src="${resource.images[0]}"
-                        alt="${resource.title || 'Resource image'}"
-                        class="w-full h-auto object-cover rounded-lg"
-                        loading="lazy"
-                      />`
-                    : ''}
-                  <div class="p-2">
-                    <h3 class="text font-medium line-clamp-4 text-balance break-all border-b-1 border-b-gray-400">
-                      ${resource.title || 'Untitled Resource'}
-                    </h3>
-                    ${resource.title2
-                      ? html`<p
-                          class="text font-normal line-clamp-4 text-balance break-all border-b-1 border-b-gray-400"
-                        >
-                          ${resource.title2}
-                        </p>`
-                      : ''}
-                    <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
-                      <span class="badge badge-outline badge-primary">${resource.category}</span>
-                      <span class="badge badge-outline badge-secondary">${formatBytes(resource.size)}</span>
-                      ${resource.resolution
-                        ? html`<span class="badge badge-outline badge-info">${resource.resolution}</span>`
-                        : ''}
-                      ${resource.free ? html`<span class="badge badge-success">Free</span>` : ''}
-                      <span
-                        class="badge ${DateTime.now().diff(
-                          DateTime.fromSeconds(resource.createdDate, { zone: 'utc' }),
-                          'weeks',
-                        ).weeks < 1
-                          ? 'badge-accent'
-                          : 'badge-neutral'}"
-                      >
-                        <iconify-icon icon="mingcute:time-line"></iconify-icon>
-                        ${formatCreatedDate(resource.createdDate)}
-                      </span>
-                      <span class="badge badge-info">
-                        <iconify-icon icon="icons8:up-round"></iconify-icon>
-                        ${resource.seeders}
-                      </span>
-                    </div>
-                    ${resource.labels && resource.labels.length > 0
-                      ? html`
-                    <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
-                      ${resource.labels.map(
-                        (label) => html`
-                          <span class="badge badge-outline badge-neutral">${label}</span>
-                        `,
-                      )}
-                    </div>`
-                      : ''}
-                    <div class="flex flex-row basis-full justify-end">
-                      <button class="btn btn-xs btn-info">Download</button>
-                    </div>
-                  </div>
-                </div>
-              `,
-            )
-          : html`<p>No resources found or loading...</p>`}
-      </div>
+      <div id="masonry-container">${this.renderColumns()}</div>
       ${this.renderPagination()}
     `;
   }
