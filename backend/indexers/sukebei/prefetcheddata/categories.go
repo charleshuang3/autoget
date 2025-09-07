@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"github.com/charleshuang3/autoget/backend/indexers"
+	nPrefetcheddata "github.com/charleshuang3/autoget/backend/indexers/nyaa/prefetcheddata"
 )
 
 var (
-	Categories = map[string]indexers.Category{
+	CategoryTree = map[string]indexers.Category{
 		"0_0": {ID: "0_0", Name: "All categories", SubCategories: []indexers.Category{
 			{ID: "1_0", Name: "Art", SubCategories: []indexers.Category{
 				{ID: "1_1", Name: "Art - Anime"},
@@ -24,6 +25,8 @@ var (
 			}},
 		}},
 	}
+
+	Categories = nPrefetcheddata.FlattenCategory(CategoryTree)
 
 	CategoriesList = slices.SortedFunc(maps.Values(Categories), func(a, b indexers.Category) int {
 		return strings.Compare(a.ID, b.ID)

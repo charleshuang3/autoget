@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	Categories = map[string]indexers.Category{
+	CategoryTree = map[string]indexers.Category{
 		"0_0": {ID: "0_0", Name: "All categories", SubCategories: []indexers.Category{
 			{ID: "1_0", Name: "Anime", SubCategories: []indexers.Category{
 				{ID: "1_1", Name: "Anime - AMV"},
@@ -43,7 +43,38 @@ var (
 		}},
 	}
 
+	Categories = FlattenCategory(CategoryTree)
+
 	CategoriesList = slices.SortedFunc(maps.Values(Categories), func(a, b indexers.Category) int {
 		return strings.Compare(a.ID, b.ID)
 	})
 )
+
+func FlattenCategory(category map[string]indexers.Category) map[string]indexers.Category {
+	flattened := map[string]indexers.Category{}
+
+	queue := []indexers.Category{}
+
+	// Initialize the queue with top-level categories from prefetcheddata.Categories
+	for _, cat := range category {
+		queue = append(queue, cat)
+	}
+
+	// Perform BFS
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:] // Dequeue
+
+		flattened[current.ID] = indexers.Category{
+			ID:   current.ID,
+			Name: current.Name,
+		}
+
+		// Enqueue subcategories
+		for _, subCat := range current.SubCategories {
+			queue = append(queue, subCat)
+		}
+	}
+
+	return flattened
+}
