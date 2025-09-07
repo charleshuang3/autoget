@@ -177,6 +177,16 @@ export class ResourceList extends LitElement {
                         ${resource.seeders}
                       </span>
                     </div>
+                    ${resource.labels && resource.labels.length > 0
+                      ? html`
+                    <div class="flex flex-wrap gap-1 mt-1 mb-1 pb-1 border-b-1 border-b-gray-400">
+                      ${resource.labels.map(
+                        (label) => html`
+                          <span class="badge badge-outline badge-neutral">${label}</span>
+                        `,
+                      )}
+                    </div>`
+                      : ''}
                     <div class="flex flex-row basis-full justify-end">
                       <button class="btn btn-xs btn-info">Download</button>
                     </div>

@@ -49,6 +49,7 @@ export interface Resource {
   dbs: DB[];
   images: string[];
   free: boolean;
+  labels: string[];
 }
 
 export interface Pagination {
