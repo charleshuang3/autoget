@@ -99,6 +99,18 @@ export class ResourceList extends LitElement {
     }
   }
 
+  private async handleDownloadClick(indexerId: string, resourceId: string) {
+    const url = `/api/v1/indexers/${indexerId}/resources/${resourceId}/download`;
+    try {
+      const response = await fetch(url, { method: 'GET' });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error initiating download:', error);
+    }
+  }
+
   private renderResourceCard(resource: any): TemplateResult {
     return html`
       <div class="image-card rounded-lg overflow-hidden shadow-lg border border-gray-700 bg-gray-100 mb-2">
@@ -148,7 +160,9 @@ export class ResourceList extends LitElement {
               </div>`
             : ''}
           <div class="flex flex-row basis-full justify-end">
-            <button class="btn btn-xs btn-info">Download</button>
+            <button class="btn btn-xs btn-info" @click=${() => this.handleDownloadClick(this.indexerId, resource.id)}>
+              Download
+            </button>
           </div>
         </div>
       </div>
