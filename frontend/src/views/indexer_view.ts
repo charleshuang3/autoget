@@ -1,6 +1,5 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import 'iconify-icon';
 
 import { type Category, fetchIndexerCategories } from '../utils/api';
 import '../components/navbar.ts';

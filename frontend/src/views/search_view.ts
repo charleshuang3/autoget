@@ -1,6 +1,5 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import 'iconify-icon';
 
 import { fetchIndexers, fetchIndexerCategories, type Category } from '../utils/api';
 import '../components/navbar.ts';
@@ -264,7 +263,7 @@ export class SearchView extends LitElement {
                   @input=${this.handleSearchQueryInput}
                 />
                 <button class="btn join-item btn-primary" type="submit">
-                  <iconify-icon icon="mdi:magnify" width="24" height="24"></iconify-icon>
+                  <span class="icon-[material-symbols--search]" style="width: 1.2em; height: 1.2em;"></span>
                 </button>
               </div>
             </form>

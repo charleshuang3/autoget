@@ -1,7 +1,6 @@
 import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { DateTime } from 'luxon';
-import 'iconify-icon';
 
 import { fetchIndexerResources, type ResourcesResponse } from '../utils/api';
 import { formatBytes, formatCreatedDate } from '../utils/format';
@@ -133,11 +132,11 @@ export class ResourceList extends LitElement {
                 ? 'badge-accent'
                 : 'badge-neutral'}"
             >
-              <iconify-icon icon="mingcute:time-line"></iconify-icon>
+              <span class="icon-[mingcute--time-line]"></span>
               ${formatCreatedDate(resource.createdDate)}
             </span>
             <span class="badge badge-info">
-              <iconify-icon icon="icons8:up-round"></iconify-icon>
+              <span class="icon-[icons8--up-round]"></span>
               ${resource.seeders}
             </span>
           </div>

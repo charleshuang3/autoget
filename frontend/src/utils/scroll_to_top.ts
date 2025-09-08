@@ -3,7 +3,7 @@ function createScrollToTopButton(scrollable: HTMLElement): HTMLElement {
   button.id = 'scroll-to-top-btn';
   button.classList.add('fixed', 'bottom-10', 'right-10', 'btn', 'btn-primary', 'btn-circle');
   button.setAttribute('aria-label', 'Scroll to top');
-  button.innerHTML = '<iconify-icon icon="mdi:arrow-up" width="24" height="24"></iconify-icon>';
+  button.innerHTML = '<span class="icon-[mdi--arrow-up]" style="width: 1.2em; height: 1.2em;"></span>';
   button.onclick = () => {
     scrollable.scrollTo({
       top: 0,
