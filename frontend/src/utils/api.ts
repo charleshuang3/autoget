@@ -67,12 +67,13 @@ export interface ResourcesResponse {
 export async function fetchIndexerResources(
   indexer: string,
   category: string,
+  keyword: string,
   page: number,
   pageSize: number = 100,
 ): Promise<ResourcesResponse | null> {
   try {
     const response = await fetch(
-      `/api/v1/indexers/${indexer}/resources?category=${category}&page=${page}&pageSize=${pageSize}`,
+      `/api/v1/indexers/${indexer}/resources?category=${category}&keyword=${keyword}&page=${page}&pageSize=${pageSize}`,
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

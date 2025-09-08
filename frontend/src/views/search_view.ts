@@ -4,6 +4,7 @@ import 'iconify-icon';
 
 import { fetchIndexers, fetchIndexerCategories, type Category } from '../utils/api';
 import '../components/navbar.ts';
+import '../components/resource_list.ts'; // Import the resource-list component
 import globalStyles from '/src/index.css?inline';
 
 @customElement('search-view')
@@ -60,10 +61,100 @@ export class SearchView extends LitElement {
   @state()
   private searchQuery = '';
 
+  @state()
+  private currentKeyword: string = '';
+
+  @state()
+  private currentIndexer: string = '';
+
+  @state()
+  private currentCategory: string = '';
+
+  @state()
+  private currentPage: number = 1;
+
   async connectedCallback() {
     super.connectedCallback();
     this.indexers = await fetchIndexers();
+    window.addEventListener('popstate', this.handlePopState);
+    this.handlePopState(); // Initial call to set state from URL
   }
+
+  disconnectedCallback() {
+    window.removeEventListener('popstate', this.handlePopState);
+    super.disconnectedCallback();
+  }
+
+  private handlePopState = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.currentKeyword = urlParams.get('keyword') || '';
+    this.currentIndexer = urlParams.get('indexer') || '';
+    this.currentCategory = urlParams.get('category') || '';
+    this.currentPage = parseInt(urlParams.get('page') || '1', 10);
+
+    // Update search query input if it's different from the URL
+    if (this.searchQuery !== this.currentKeyword) {
+      this.searchQuery = this.currentKeyword;
+    }
+
+    // If indexer changed from URL, re-fetch categories
+    if (this.selectedIndexer !== this.currentIndexer) {
+      this.selectedIndexer = this.currentIndexer;
+      // Ensure allCategories is cleared if no indexer is selected
+      if (!this.selectedIndexer) {
+        this.allCategories = [];
+      }
+      this.fetchAndDisplayCategories();
+    }
+
+    // Update selected category path based on URL
+    // This is a simplified approach; a more robust solution might involve re-building the path from allCategories
+    if (this.currentCategory) {
+      const categoryInPath = this.selectedCategoryPath.find((c) => c.id === this.currentCategory);
+      if (!categoryInPath) {
+        // Attempt to find the category in allCategories and set the path
+        const findCategoryAndPath = (
+          categories: Category[],
+          targetId: string,
+          currentPath: Category[],
+        ): Category[] | null => {
+          for (const cat of categories) {
+            const newPath = [...currentPath, cat];
+            if (cat.id === targetId) {
+              return newPath;
+            }
+            if (cat.subCategories) {
+              const subPath = findCategoryAndPath(cat.subCategories, targetId, newPath);
+              if (subPath) {
+                return subPath;
+              }
+            }
+          }
+          return null;
+        };
+        const newPath = findCategoryAndPath(this.allCategories, this.currentCategory, []);
+        if (newPath) {
+          this.selectedCategoryPath = newPath;
+          // Also update displayedCategoryLevels to reflect the path
+          this.displayedCategoryLevels = [];
+          let currentLevelCategories = this.allCategories;
+          for (let i = 0; i < newPath.length; i++) {
+            this.displayedCategoryLevels.push(currentLevelCategories);
+            currentLevelCategories = newPath[i].subCategories || [];
+          }
+        } else {
+          this.selectedCategoryPath = [];
+          this.displayedCategoryLevels = [this.allCategories];
+        }
+      }
+    } else {
+      this.selectedCategoryPath = [];
+      // Only display top-level categories if an indexer is selected
+      this.displayedCategoryLevels = this.selectedIndexer ? [this.allCategories] : [];
+    }
+
+    this.requestUpdate();
+  };
 
   private async handleIndexerChange(indexer: string) {
     this.selectedIndexer = indexer;
@@ -83,12 +174,23 @@ export class SearchView extends LitElement {
 
   private handleSearch(e: Event) {
     e.preventDefault();
-    console.log({
-      query: this.searchQuery,
-      indexer: this.selectedIndexer,
-      selectedCategory: this.selectedCategoryPath[this.selectedCategoryPath.length - 1]?.id,
-      selectedCategoryPath: this.selectedCategoryPath.map((c) => c.id),
-    });
+    const url = new URL(window.location.href);
+    url.searchParams.set('keyword', this.searchQuery);
+    url.searchParams.set('indexer', this.selectedIndexer);
+    const categoryId = this.selectedCategoryPath[this.selectedCategoryPath.length - 1]?.id;
+    if (categoryId) {
+      url.searchParams.set('category', categoryId);
+    } else {
+      url.searchParams.delete('category');
+    }
+    window.history.pushState({}, '', url.toString());
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    // Uncheck the search-collapse checkbox
+    const searchCollapse = this.shadowRoot?.getElementById('search-collapse') as HTMLInputElement;
+    if (searchCollapse) {
+      searchCollapse.checked = false;
+    }
   }
 
   private handleSearchQueryInput(e: Event) {
@@ -162,7 +264,11 @@ export class SearchView extends LitElement {
           </form>
 
           <div class="collapse collapse-arrow mt-2">
-            <input type="checkbox" checked />
+            <input
+              id="search-collapse"
+              type="checkbox"
+              .checked=${!this.currentKeyword && !this.currentIndexer && !this.currentCategory}
+            />
 
             <div class="collapse-title p-0 pt-2 pb-2 flex flex-row gap-2">
               <span class="p-2 text-sm">Searching in: </span>
@@ -200,6 +306,17 @@ export class SearchView extends LitElement {
               </div>
             </div>
           </div>
+
+          ${this.currentKeyword || this.currentIndexer || this.currentCategory
+            ? html`
+                <resource-list
+                  .keyword=${this.currentKeyword}
+                  .indexerId=${this.currentIndexer}
+                  .category=${this.currentCategory}
+                  .page=${this.currentPage}
+                ></resource-list>
+              `
+            : ''}
         </div>
       </div>
     `;

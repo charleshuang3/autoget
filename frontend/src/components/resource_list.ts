@@ -17,6 +17,9 @@ export class ResourceList extends LitElement {
   @property({ type: String })
   public category: string = '';
 
+  @property({ type: String })
+  public keyword: string = '';
+
   @property({ type: Number })
   public page: number = 1;
 
@@ -31,16 +34,16 @@ export class ResourceList extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    window.addEventListener('resize', this._handleResize);
-    this._handleResize(); // Initial call to set column count
+    window.addEventListener('resize', this.handleResize);
+    this.handleResize(); // Initial call to set column count
   }
 
   disconnectedCallback() {
-    window.removeEventListener('resize', this._handleResize);
+    window.removeEventListener('resize', this.handleResize);
     super.disconnectedCallback();
   }
 
-  private _handleResize = () => {
+  private handleResize = () => {
     const width = window.innerWidth;
     if (width >= 1280) {
       // xl
@@ -62,14 +65,19 @@ export class ResourceList extends LitElement {
   protected async update(changedProperties: PropertyValues): Promise<void> {
     super.update(changedProperties);
 
-    if (changedProperties.has('indexerId') || changedProperties.has('category') || changedProperties.has('page')) {
+    if (
+      changedProperties.has('indexerId') ||
+      changedProperties.has('category') ||
+      changedProperties.has('keyword') ||
+      changedProperties.has('page')
+    ) {
       await this.fetchIndexerResources();
     }
   }
 
   private async fetchIndexerResources() {
-    if (this.indexerId && this.category) {
-      const response = await fetchIndexerResources(this.indexerId, this.category, this.page);
+    if (this.indexerId) {
+      const response = await fetchIndexerResources(this.indexerId, this.category, this.keyword, this.page);
       if (response) {
         this.resources = response;
         this.totalPages = response.pagination.totalPages;
@@ -160,7 +168,7 @@ export class ResourceList extends LitElement {
     });
 
     return html`
-      <div class="flex gap-2">
+      <div class="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2">
         ${columns.map((colItems) => html` <div class="flex flex-col flex-grow gap-2">${colItems}</div> `)}
       </div>
     `;
