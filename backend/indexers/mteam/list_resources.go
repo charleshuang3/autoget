@@ -269,7 +269,7 @@ func (m *MTeam) List(listReq *indexers.ListRequest) (*indexers.ListResult, *erro
 			images = append(images, imageUseProxy(img))
 		}
 
-		isFree := item.Status.Status == "FREE" ||
+		isFree := item.Status.Discount == "FREE" ||
 			item.Status.PromotionRule.Discount == "FREE" ||
 			item.Status.MallSingleFree.Status == "ONGOING"
 
