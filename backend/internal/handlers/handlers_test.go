@@ -54,6 +54,10 @@ func (i *indexerMock) RegisterRSSCronjob(cron *cron.Cron) {
 
 }
 
+func (i *indexerMock) DownloaderName() string {
+	return "mock-downloader"
+}
+
 type downloadersMock struct {
 	mockTorrentsDir string
 	mockDownloadDir string

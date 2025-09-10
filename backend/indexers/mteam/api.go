@@ -84,7 +84,7 @@ func NewMTeam(config *Config, mType MTeamType, torrentsDir string, db *gorm.DB, 
 	}
 
 	m := &MTeam{
-		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(n, true),
+		IndexerBasicInfo: *indexers.NewIndexerBasicInfo(n, config.Downloader, true),
 		mType:            mType,
 		config:           config,
 		db:               db,

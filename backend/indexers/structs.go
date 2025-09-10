@@ -23,22 +23,31 @@ type IIndexer interface {
 
 	// RegisterRSSCronjob
 	RegisterRSSCronjob(cron *cron.Cron)
+
+	// DownloaderName
+	DownloaderName() string
 }
 
 type IndexerBasicInfo struct {
-	Name_   string
-	Private bool
+	Name_           string
+	DownloaderName_ string
+	Private         bool
 }
 
-func NewIndexerBasicInfo(name string, private bool) *IndexerBasicInfo {
+func NewIndexerBasicInfo(name string, downloaderName string, private bool) *IndexerBasicInfo {
 	return &IndexerBasicInfo{
-		Name_:   name,
-		Private: private,
+		Name_:           name,
+		DownloaderName_: downloaderName,
+		Private:         private,
 	}
 }
 
 func (info *IndexerBasicInfo) Name() string {
 	return info.Name_
+}
+
+func (info *IndexerBasicInfo) DownloaderName() string {
+	return info.DownloaderName_
 }
 
 type Category struct {

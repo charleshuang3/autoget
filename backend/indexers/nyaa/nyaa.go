@@ -74,7 +74,7 @@ func (c *Client) getBaseURL() string {
 
 func NewClient(config *Config, torrentsDir string, db *gorm.DB, notify notify.INotifier) *Client {
 	c := &Client{
-		IndexerBasicInfo: *indexers.NewIndexerBasicInfo("nyaa", false),
+		IndexerBasicInfo: *indexers.NewIndexerBasicInfo("nyaa", config.Downloader, false),
 		config:           config,
 		torrentsDir:      torrentsDir,
 		db:               db,
@@ -150,7 +150,9 @@ func (c *Client) List(req *indexers.ListRequest) (*indexers.ListResult, *errors.
 
 	var resources []indexers.ListResourceItem
 	doc.Find("table.torrent-list tbody tr").Each(func(i int, s *goquery.Selection) {
-		item := indexers.ListResourceItem{}
+		item := indexers.ListResourceItem{
+			Free: true,
+		}
 
 		// Column 1: Category
 		categoryLink := s.Find("td:nth-child(1) a").AttrOr("href", "")

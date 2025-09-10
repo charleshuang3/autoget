@@ -18,23 +18,32 @@ const (
 	DownloadStopped
 )
 
+type MoveState uint
+
+const (
+	UnMoved MoveState = iota
+	Moved
+	Organized
+)
+
 type DownloadStatus struct {
 	ID        string `gorm:"primarykey"` // download/hash
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	State DownloadState
+	Downloader       string
+	DownloadProgress int32 // in x/1000
+	State            DownloadState
 
 	UploadHistories map[string]int64 `gorm:"serializer:json"`
 
 	ResIndexer string
 	ResTitle   string
-	ResURL     string
+	ResTitle2  string
 	Category   string
 	FileList   []string `gorm:"serializer:json"`
 
-	Moved    bool
-	MoveList map[string]string `gorm:"serializer:json"`
+	MoveState MoveState
 }
 
 func (s *DownloadStatus) AddToday(b int64) {

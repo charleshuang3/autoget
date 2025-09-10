@@ -141,8 +141,33 @@ func (s *Service) indexerDownload(c *gin.Context) {
 
 	resourceID := c.Param("resource")
 
-	indexer.Detail(resourceID, true)
+	detail, err := indexer.Detail(resourceID, true)
+	if err != nil {
+		c.JSON(err.Code, gin.H{"error": err.Message})
+		return
+	}
 
+	res, err := indexer.Download(resourceID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	downloadStatus := &db.DownloadStatus{
+		ID:         res.TorrentHash,
+		Downloader: indexer.DownloaderName(),
+		State:      db.DownloadStarted,
+		ResTitle:   detail.Title,
+		ResTitle2:  detail.Title2,
+		ResIndexer: indexerName,
+		Category:   detail.Category,
+	}
+	if err := s.db.Create(downloadStatus).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"status": "started"})
 }
 
 type indexerRegisterSearchReq struct {
