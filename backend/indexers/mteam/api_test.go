@@ -168,8 +168,8 @@ func TestDownload(t *testing.T) {
 	require.Nil(t, err)
 
 	assert.NotEmpty(t, res.TorrentFilePath)
-	assert.Empty(t, res.Magnet)
 	assert.FileExists(t, res.TorrentFilePath)
+	assert.NotEmpty(t, res.TorrentHash)
 
 	mi, er := metainfo.LoadFromFile(res.TorrentFilePath)
 	require.NoError(t, er)

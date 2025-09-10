@@ -157,6 +157,7 @@ func TestDownload(t *testing.T) {
 	require.Nil(t, err)
 	assert.NotEmpty(t, got.TorrentFilePath)
 	assert.FileExists(t, got.TorrentFilePath)
+	assert.Equal(t, "5344c9d0e58483e4587e1de7e449abacbe92eff2", got.TorrentHash)
 }
 
 func TestPullRSS(t *testing.T) {

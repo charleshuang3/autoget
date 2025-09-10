@@ -104,8 +104,8 @@ type ResourceDetail struct {
 }
 
 type DownloadResult struct {
-	Magnet          string
 	TorrentFilePath string
+	TorrentHash     string
 }
 
 type ListRequest struct {

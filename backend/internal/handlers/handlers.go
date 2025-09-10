@@ -132,6 +132,16 @@ func (s *Service) indexerResourceDetail(c *gin.Context) {
 }
 
 func (s *Service) indexerDownload(c *gin.Context) {
+	indexerName := c.Param("indexer")
+	indexer, ok := s.indexers[indexerName]
+	if !ok {
+		c.JSON(404, gin.H{"error": "Indexer not found"})
+		return
+	}
+
+	resourceID := c.Param("resource")
+
+	indexer.Detail(resourceID, true)
 
 }
 
