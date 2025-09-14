@@ -10,7 +10,9 @@ import (
 )
 
 type IDownloader interface {
+	RegisterCronjobs(cron *cron.Cron)
 	RegisterDailySeedingChecker(cron *cron.Cron)
+	ProgressChecker()
 	TorrentsDir() string
 	DownloadDir() string
 }

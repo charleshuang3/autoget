@@ -38,6 +38,7 @@ downloaders:
       url: "http://localhost:9091"
       torrents_dir: "/tmp/torrents"
       download_dir: "/tmp/downloads"
+      finished_dir: "/tmp/finished"
 `
 		tmpFile, err := os.CreateTemp("", "config_with_sukebei_*.yaml")
 		assert.NoError(t, err)
@@ -94,6 +95,7 @@ downloaders:
       url: "http://localhost:9091"
       torrents_dir: "/tmp/torrents"
       download_dir: "/tmp/downloads"
+      finished_dir: "/tmp/finished"
 `
 		tmpFile, err := os.CreateTemp("", "config_without_sukebei_*.yaml")
 		assert.NoError(t, err)
@@ -156,6 +158,7 @@ func TestConfig_validate(t *testing.T) {
 							URL:         "http://localhost:9091",
 							TorrentsDir: "/tmp/torrents",
 							DownloadDir: "/tmp/downloads",
+							FinishedDir: "/tmp/finished",
 						},
 					},
 				},

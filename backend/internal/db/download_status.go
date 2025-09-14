@@ -27,7 +27,7 @@ const (
 )
 
 type DownloadStatus struct {
-	ID        string `gorm:"primarykey"` // download/hash
+	ID        string `gorm:"primarykey"` // hash
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
@@ -68,9 +68,21 @@ func (s *DownloadStatus) CleanupHistory() {
 	}
 }
 
+func GetDownloadStatusByDownloaderAndState(db *gorm.DB, downloader string, state DownloadState) ([]DownloadStatus, error) {
+	var ss []DownloadStatus
+	err := db.Where("downloader = ?", downloader).Where("state == ?", state).Find(&ss).Error
+	return ss, err
+}
+
+func GetDownloadStatusByDownloaderStateAndMoveState(db *gorm.DB, downloader string, state DownloadState, moveState MoveState) ([]DownloadStatus, error) {
+	var ss []DownloadStatus
+	err := db.Where("downloader = ?", downloader).Where("state == ?", state).Where("move_state == ?", moveState).Find(&ss).Error
+	return ss, err
+}
+
 func GetDownloadStatus(db *gorm.DB, downloader, hash string) (*DownloadStatus, error) {
 	s := &DownloadStatus{}
-	err := db.First(s, "id = ?", downloader+"/"+hash).Error
+	err := db.First(s, "id = ?", hash).Error
 	return s, err
 }
 

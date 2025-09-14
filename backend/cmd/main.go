@@ -56,7 +56,7 @@ func main() {
 			log.Fatal().Err(err).Msg("failed to create downloader")
 		}
 		downloaderMap[name] = downloader
-		downloader.RegisterDailySeedingChecker(cronjob)
+		downloader.RegisterCronjobs(cronjob)
 	}
 
 	indexerMap := map[string]indexers.IIndexer{}

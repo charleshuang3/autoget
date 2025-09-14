@@ -50,9 +50,7 @@ func (i *indexerMock) Download(id string) (*indexers.DownloadResult, *errors.HTT
 	return i.mockDownloadResult, i.mockDownloadErr
 }
 
-func (i *indexerMock) RegisterRSSCronjob(cron *cron.Cron) {
-
-}
+func (i *indexerMock) RegisterRSSCronjob(cron *cron.Cron) {}
 
 func (i *indexerMock) DownloaderName() string {
 	return "mock-downloader"
@@ -71,9 +69,9 @@ func (d *downloadersMock) DownloadDir() string {
 	return d.mockDownloadDir
 }
 
-func (d *downloadersMock) RegisterDailySeedingChecker(cron *cron.Cron) {
-
-}
+func (d *downloadersMock) RegisterCronjobs(cron *cron.Cron)            {}
+func (d *downloadersMock) RegisterDailySeedingChecker(cron *cron.Cron) {}
+func (d *downloadersMock) ProgressChecker()                            {}
 
 func testSetup(t *testing.T) (*Service, *gin.Engine, *indexerMock, *gorm.DB) {
 	t.Helper()

@@ -237,8 +237,8 @@ func TestSearchRSS(t *testing.T) {
 	search2After := &db.RSSSearch{}
 	search2After.ID = search2.ID
 	assert.NoError(t, d.First(&search2After).Error)
-	assert.Equal(t, "1981791", search2After.ResID)
+	assert.Equal(t, "2015287", search2After.ResID)
 	assert.Equal(t, "Match Search 2", search2After.Title)
 	assert.Equal(t, "Anime - Non-English", search2After.Catergory)
-	assert.Equal(t, "https://nyaa.si/download/1981791.torrent", search2After.URL)
+	assert.Equal(t, "https://nyaa.si/download/2015287.torrent", search2After.URL)
 }

@@ -10,6 +10,7 @@ type TransmissionConfig struct {
 	URL         string `yaml:"url"`
 	TorrentsDir string `yaml:"torrents_dir"`
 	DownloadDir string `yaml:"download_dir"`
+	FinishedDir string `yaml:"finished_dir"`
 	Username    string `yaml:"username"`
 	Password    string `yaml:"password"`
 }
@@ -23,6 +24,9 @@ func (c *TransmissionConfig) Validate() error {
 	}
 	if c.DownloadDir == "" {
 		return fmt.Errorf("download directory is required")
+	}
+	if c.FinishedDir == "" {
+		return fmt.Errorf("finished directory is required")
 	}
 	return nil
 }
