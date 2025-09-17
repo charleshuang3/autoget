@@ -65,6 +65,14 @@ func (c *Client) RegisterCronjobs(cron *cron.Cron) {
 	}()
 }
 
+func toTorrentsByHash(torrents []transmissionrpc.Torrent) map[string]*transmissionrpc.Torrent {
+	torrentsByHash := make(map[string]*transmissionrpc.Torrent)
+	for _, t := range torrents {
+		torrentsByHash[*t.HashString] = &t
+	}
+	return torrentsByHash
+}
+
 func (c *Client) ProgressChecker() {
 	torrents, err := c.client.TorrentGetAll(context.Background())
 	if err != nil {
@@ -72,12 +80,9 @@ func (c *Client) ProgressChecker() {
 		return
 	}
 
-	torrentsByHash := make(map[string]*transmissionrpc.Torrent)
-	for _, t := range torrents {
-		torrentsByHash[*t.HashString] = &t
-	}
+	torrentsByHash := toTorrentsByHash(torrents)
 
-	statuses, err := db.GetDownloadStatusByDownloaderAndState(c.db, c.name, db.DownloadStarted)
+	statuses, err := db.GetUnfinishedDownloadStatusByDownloader(c.db, c.name)
 	if err != nil {
 		logger.Error().Err(err).Str("name", c.name).Msg("failed to get download status")
 		return
@@ -108,7 +113,7 @@ func (c *Client) ProgressChecker() {
 	}
 
 	// start copys
-	statuses, err = db.GetDownloadStatusByDownloaderStateAndMoveState(c.db, c.name, db.DownloadSeeding, db.UnMoved)
+	statuses, err = db.GetFinishedUnmoveedDownloadStatusByDownloader(c.db, c.name)
 	if err != nil {
 		logger.Error().Err(err).Str("name", c.name).Msg("failed to get seeding download status")
 		return
@@ -173,7 +178,15 @@ func (c *Client) checkDailySeeding() {
 		return
 	}
 
-	stopIDs := []int64{}
+	torrentsByHash := toTorrentsByHash(torrents)
+
+	c.stopTorrents(torrents)
+	c.removeTorrents(torrentsByHash)
+}
+
+func (c *Client) stopTorrents(torrents []transmissionrpc.Torrent) {
+	stopIDs := []string{}
+	stopTorIDs := []int64{}
 
 	for _, t := range torrents {
 		// only check seeding torrents
@@ -184,12 +197,13 @@ func (c *Client) checkDailySeeding() {
 		hash := (*t.HashString)
 		uploaded := *t.UploadedEver
 
-		ss, err := db.GetDownloadStatus(c.db, c.name, hash)
+		ss, err := db.GetDownloadStatus(c.db, hash)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ss.ID = hash
 			ss.Downloader = c.name
 			ss.State = db.DownloadSeeding
 			ss.UploadHistories = make(map[string]int64)
+			ss.ResTitle = *t.Name
 			ss.AddToday(uploaded)
 			db.SaveDownloadStatus(c.db, ss)
 
@@ -210,19 +224,60 @@ func (c *Client) checkDailySeeding() {
 		}
 
 		// stop this torrent
-		stopIDs = append(stopIDs, *t.ID)
-
-		ss.State = db.DownloadStopped
-		db.SaveDownloadStatus(c.db, ss)
+		stopTorIDs = append(stopTorIDs, *t.ID)
+		stopIDs = append(stopIDs, hash)
 	}
 
-	if err := c.db.Where("updated_at < ?", time.Now().AddDate(0, 0, -db.StoreMaxDays)).Delete(&db.DownloadStatus{}).Error; err != nil {
-		logger.Error().Err(err).Str("name", c.name).Msg("failed to cleanup seeding status")
+	// nothing to stop
+	if len(stopTorIDs) == 0 {
+		return
 	}
 
 	// stop torrents
-	if err := c.client.TorrentStopIDs(context.Background(), stopIDs); err != nil {
+	if err := c.client.TorrentStopIDs(context.Background(), stopTorIDs); err != nil {
 		logger.Error().Err(err).Str("name", c.name).Msg("failed to stop torrents")
+		return
+	}
+
+	// update state in db
+	if err := db.UpdateDownloadStateForStatuses(c.db, stopIDs, db.DownloadStopped); err != nil {
+		logger.Error().Err(err).Str("name", c.name).Msg("failed to update download status")
+		return
+	}
+}
+
+func (c *Client) removeTorrents(torrentsByHash map[string]*transmissionrpc.Torrent) {
+	statuses, err := db.GetStoppedMovedDownloadStatusByDownloader(c.db, c.name)
+	if err != nil {
+		logger.Error().Err(err).Str("name", c.name).Msg("failed to get stopped download status")
+		return
+	}
+
+	deleteStatusIDs := []string{}
+	deleteTorIDs := []int64{}
+	for _, s := range statuses {
+		t, ok := torrentsByHash[s.ID]
+		if !ok {
+			continue
+		}
+
+		deleteTorIDs = append(deleteTorIDs, *t.ID)
+		deleteStatusIDs = append(deleteStatusIDs, s.ID)
+	}
+
+	// nothing to delete
+	if len(deleteTorIDs) == 0 {
+		return
+	}
+
+	// delete torrents
+	if err := c.client.TorrentRemove(context.Background(), transmissionrpc.TorrentRemovePayload{IDs: deleteTorIDs, DeleteLocalData: true}); err != nil {
+		logger.Error().Err(err).Str("name", c.name).Msg("failed to delete torrents")
+		return
+	}
+
+	if err := db.UpdateDownloadStateForStatuses(c.db, deleteStatusIDs, db.DownloadDeleted); err != nil {
+		logger.Error().Err(err).Str("name", c.name).Msg("failed to update download status")
 	}
 }
 

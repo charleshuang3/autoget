@@ -2,6 +2,7 @@ package transmission
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,6 @@ import (
 	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 type requestPayload struct {
@@ -59,11 +59,13 @@ func (f *fakeTransmission) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func newTorrent(id int64, hash string, status transmissionrpc.TorrentStatus, uploaded int64) transmissionrpc.Torrent {
+	name := fmt.Sprintf("Torrent %d", id)
 	return transmissionrpc.Torrent{
 		ID:           &id,
 		HashString:   &hash,
 		Status:       &status,
 		UploadedEver: &uploaded,
+		Name:         &name,
 	}
 }
 
@@ -101,39 +103,48 @@ func TestCheckDailySeeding(t *testing.T) {
 
 	// r1 is current seeding, less then 3 day
 	r1 := &db.DownloadStatus{
-		ID: "1",
+		ID:         "1",
+		Downloader: "test",
 		UploadHistories: map[string]int64{
 			yesterday: 0,
 		},
+		State: db.DownloadSeeding,
 	}
 	require.NoError(t, d.Create(r1).Error)
 
 	// r2 is current seeding, more then 3 day, latest upload - 3 day ago > 1MB, it will continue seeding
 	r2 := &db.DownloadStatus{
-		ID: "2",
+		ID:         "2",
+		Downloader: "test",
 		UploadHistories: map[string]int64{
 			threeDaysAgo: 0,
 			twoMonthsAgo: 0,
 		},
+		State: db.DownloadSeeding,
 	}
 	require.NoError(t, d.Create(r2).Error)
 
 	// r3 is current seeding, more then 3 day, latest upload - 3 day ago < 1MB, it will stop seeding
 	r3 := &db.DownloadStatus{
-		ID: "3",
+		ID:         "3",
+		Downloader: "test",
 		UploadHistories: map[string]int64{
 			threeDaysAgo: 0,
 		},
+		State: db.DownloadSeeding,
 	}
 	require.NoError(t, d.Create(r3).Error)
 
 	// r4 is not current seeding, more then 30 day, record should be deleted
 	r4 := &db.DownloadStatus{
-		ID:        "4",
-		UpdatedAt: time.Now().AddDate(0, 0, -1-db.StoreMaxDays),
+		ID:         "4",
+		Downloader: "test",
+		UpdatedAt:  time.Now().AddDate(0, 0, -1-db.StoreMaxDays),
 		UploadHistories: map[string]int64{
 			threeDaysAgo: 0,
 		},
+		State:     db.DownloadStopped,
+		MoveState: db.Moved,
 	}
 	require.NoError(t, d.Create(r4).Error)
 
@@ -149,14 +160,17 @@ func TestCheckDailySeeding(t *testing.T) {
 			},
 		},
 		&struct{}{},
+		&struct{}{},
 	}
 
 	client.checkDailySeeding()
 
-	assert.Len(t, fake.reqs, 2)
+	assert.Len(t, fake.reqs, 3)
 	assert.Equal(t, "torrent-get", fake.reqs[0].Method)
 	assert.Equal(t, "torrent-stop", fake.reqs[1].Method)
+	assert.Equal(t, "torrent-remove", fake.reqs[2].Method)
 	assert.Equal(t, map[string]interface{}{"ids": []interface{}{float64(3)}}, fake.reqs[1].Arguments)
+	assert.Equal(t, map[string]interface{}{"ids": []interface{}{float64(4)}, "delete-local-data": true}, fake.reqs[2].Arguments)
 
 	{
 		// r1 new history item added
@@ -192,7 +206,8 @@ func TestCheckDailySeeding(t *testing.T) {
 		// r4 should be deleted
 		r := &db.DownloadStatus{}
 		err := d.First(r, "id = ?", "4").Error
-		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.NoError(t, err)
+		assert.Equal(t, r.State, db.DownloadDeleted)
 	}
 
 	{

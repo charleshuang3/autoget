@@ -16,6 +16,7 @@ const (
 	DownloadStarted DownloadState = iota
 	DownloadSeeding
 	DownloadStopped
+	DownloadDeleted
 )
 
 type MoveState uint
@@ -68,19 +69,25 @@ func (s *DownloadStatus) CleanupHistory() {
 	}
 }
 
-func GetDownloadStatusByDownloaderAndState(db *gorm.DB, downloader string, state DownloadState) ([]DownloadStatus, error) {
+func GetUnfinishedDownloadStatusByDownloader(db *gorm.DB, downloader string) ([]DownloadStatus, error) {
 	var ss []DownloadStatus
-	err := db.Where("downloader = ?", downloader).Where("state == ?", state).Find(&ss).Error
+	err := db.Where("downloader = ?", downloader).Where("state = ?", DownloadStarted).Find(&ss).Error
 	return ss, err
 }
 
-func GetDownloadStatusByDownloaderStateAndMoveState(db *gorm.DB, downloader string, state DownloadState, moveState MoveState) ([]DownloadStatus, error) {
+func GetFinishedUnmoveedDownloadStatusByDownloader(db *gorm.DB, downloader string) ([]DownloadStatus, error) {
 	var ss []DownloadStatus
-	err := db.Where("downloader = ?", downloader).Where("state == ?", state).Where("move_state == ?", moveState).Find(&ss).Error
+	err := db.Where("downloader = ?", downloader).Where("state >= ?", DownloadSeeding).Where("move_state = ?", UnMoved).Find(&ss).Error
 	return ss, err
 }
 
-func GetDownloadStatus(db *gorm.DB, downloader, hash string) (*DownloadStatus, error) {
+func GetStoppedMovedDownloadStatusByDownloader(db *gorm.DB, downloader string) ([]DownloadStatus, error) {
+	var ss []DownloadStatus
+	err := db.Where("downloader = ?", downloader).Where("state = ?", DownloadStopped).Where("move_state >= ?", Moved).Find(&ss).Error
+	return ss, err
+}
+
+func GetDownloadStatus(db *gorm.DB, hash string) (*DownloadStatus, error) {
 	s := &DownloadStatus{}
 	err := db.First(s, "id = ?", hash).Error
 	return s, err
@@ -92,4 +99,8 @@ func SaveDownloadStatus(db *gorm.DB, s *DownloadStatus) error {
 
 func RemoveDownloadStatus(db *gorm.DB, id string) error {
 	return db.Where("id = ?", id).Delete(&DownloadStatus{}).Error
+}
+
+func UpdateDownloadStateForStatuses(db *gorm.DB, ids []string, state DownloadState) error {
+	return db.Model(&DownloadStatus{}).Where("id IN ?", ids).Update("state", state).Error
 }
