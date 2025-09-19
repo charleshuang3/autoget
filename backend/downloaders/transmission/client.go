@@ -125,12 +125,17 @@ func (c *Client) ProgressChecker() {
 			continue
 		}
 
-		os.MkdirAll(filepath.Join(c.cfg.Transmission.FinishedDir, s.ID), 0755)
-
 		success := true
 		for _, f := range t.Files {
 			from := filepath.Join(*t.DownloadDir, f.Name)
 			target := filepath.Join(c.cfg.Transmission.FinishedDir, s.ID, f.Name)
+
+			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				success = false
+				logger.Error().Err(err).Str("name", c.name).Msg("failed to create parent directory for copied file")
+				break
+			}
+
 			fromFile, err := os.Open(from)
 			if err != nil {
 				success = false
@@ -138,10 +143,11 @@ func (c *Client) ProgressChecker() {
 				break
 			}
 			defer fromFile.Close()
-			targetFile, err := os.Open(target)
+
+			targetFile, err := os.Create(target)
 			if err != nil {
 				success = false
-				logger.Error().Err(err).Str("name", c.name).Msg("failed to open file")
+				logger.Error().Err(err).Str("name", c.name).Msg("failed to create file")
 				break
 			}
 			defer targetFile.Close()

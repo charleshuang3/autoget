@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -217,5 +219,135 @@ func TestCheckDailySeeding(t *testing.T) {
 		assert.Equal(t, map[string]int64{
 			today: 1000 * 1024,
 		}, r.UploadHistories)
+	}
+}
+
+func newTorrentWithProgress(id int64, hash string, status transmissionrpc.TorrentStatus, percentDone float64, downloadDir string, files []transmissionrpc.TorrentFile) transmissionrpc.Torrent {
+	name := fmt.Sprintf("Torrent %d", id)
+	uploaded := int64(0)
+	return transmissionrpc.Torrent{
+		ID:           &id,
+		HashString:   &hash,
+		Status:       &status,
+		PercentDone:  &percentDone,
+		Name:         &name,
+		DownloadDir:  &downloadDir,
+		Files:        files,
+		UploadedEver: &uploaded,
+	}
+}
+
+func TestProgressChecker(t *testing.T) {
+	fake := &fakeTransmission{}
+
+	serv := httptest.NewServer(http.HandlerFunc(fake.ServeHTTP))
+
+	httpClient = &http.Client{}
+	t.Cleanup(func() {
+		httpClient = http.DefaultClient
+		serv.Close()
+	})
+
+	d, err := db.SqliteForTest()
+	require.NoError(t, err)
+
+	tmpDir, err := os.MkdirTemp("", "autoget-test")
+	require.NoError(t, err)
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
+	downloadDir := filepath.Join(tmpDir, "download")
+	finishedDir := filepath.Join(tmpDir, "finished")
+	require.NoError(t, os.Mkdir(downloadDir, 0755))
+	require.NoError(t, os.Mkdir(finishedDir, 0755))
+
+	conf := &config.DownloaderConfig{
+		Transmission: &config.TransmissionConfig{
+			URL:         serv.URL,
+			DownloadDir: downloadDir,
+			FinishedDir: finishedDir,
+		},
+	}
+
+	client, err := New("test", conf, d)
+	require.NoError(t, err)
+
+	// r1 is downloading
+	r1 := &db.DownloadStatus{
+		ID:               "1",
+		Downloader:       "test",
+		State:            db.DownloadStarted,
+		DownloadProgress: 0,
+	}
+	require.NoError(t, d.Create(r1).Error)
+
+	// r2 is seeding and unmoved
+	r2 := &db.DownloadStatus{
+		ID:         "2",
+		Downloader: "test",
+		State:      db.DownloadSeeding,
+		MoveState:  db.UnMoved,
+	}
+	require.NoError(t, d.Create(r2).Error)
+
+	// create a fake file for r2
+	r2FileContent := "hello world"
+	r2FileName := "r2.txt"
+	require.NoError(t, os.WriteFile(filepath.Join(downloadDir, r2FileName), []byte(r2FileContent), 0644))
+
+	// create another fake file in a subdirectory for r2
+	r2SubFileContent := "hello sub world"
+	r2SubFileName := filepath.Join("sub", "r2.txt")
+	require.NoError(t, os.MkdirAll(filepath.Join(downloadDir, "sub"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(downloadDir, r2SubFileName), []byte(r2SubFileContent), 0644))
+
+	percentDone1 := 0.5
+	percentDone2 := 1.0
+	downloadSpeed := int64(1000)
+	activeTorrentCount := int64(1)
+
+	fake.resp = []any{
+		&torrentGetResults{
+			Torrents: []transmissionrpc.Torrent{
+				newTorrentWithProgress(1, "1", transmissionrpc.TorrentStatusDownload, percentDone1, downloadDir, nil),
+				newTorrentWithProgress(2, "2", transmissionrpc.TorrentStatusSeed, percentDone2, downloadDir, []transmissionrpc.TorrentFile{
+					{Name: r2FileName, Length: int64(len(r2FileContent))},
+					{Name: r2SubFileName, Length: int64(len(r2SubFileContent))},
+				}),
+			},
+		},
+		&transmissionrpc.SessionStats{
+			DownloadSpeed:      downloadSpeed,
+			ActiveTorrentCount: activeTorrentCount,
+		},
+	}
+
+	client.ProgressChecker()
+
+	assert.Len(t, fake.reqs, 2)
+	assert.Equal(t, "torrent-get", fake.reqs[0].Method)
+	assert.Equal(t, "session-stats", fake.reqs[1].Method)
+
+	{
+		// r1 progress updated
+		r := &db.DownloadStatus{}
+		require.NoError(t, d.First(r, "id = ?", "1").Error)
+		assert.Equal(t, int32(percentDone1*1000), r.DownloadProgress)
+	}
+
+	{
+		// r2 moved
+		r := &db.DownloadStatus{}
+		require.NoError(t, d.First(r, "id = ?", "2").Error)
+		assert.Equal(t, db.Moved, r.MoveState)
+
+		// check file copied
+		copiedContent, err := os.ReadFile(filepath.Join(finishedDir, "2", r2FileName))
+		require.NoError(t, err)
+		assert.Equal(t, r2FileContent, string(copiedContent))
+
+		// check sub file copied
+		copiedSubContent, err := os.ReadFile(filepath.Join(finishedDir, "2", r2SubFileName))
+		require.NoError(t, err)
+		assert.Equal(t, r2SubFileContent, string(copiedSubContent))
 	}
 }
