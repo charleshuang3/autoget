@@ -27,14 +27,27 @@ const (
 	Organized
 )
 
+type OrganizePlan struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+type OrganizePlanAction uint
+
+const (
+	None OrganizePlanAction = iota
+	Accept
+	Reject
+)
+
 type DownloadStatus struct {
 	ID        string `gorm:"primarykey"` // hash
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Downloader       string
-	DownloadProgress int32 // in x/1000
-	State            DownloadState
+	Downloader       string        `gorm:"index:idx_downloader_state"`
+	DownloadProgress int32         // in x/1000
+	State            DownloadState `gorm:"index:idx_downloader_state;index:idx_downloader_state_movestate"`
 
 	UploadHistories map[string]int64 `gorm:"serializer:json"`
 
@@ -44,7 +57,10 @@ type DownloadStatus struct {
 	Category   string
 	FileList   []string `gorm:"serializer:json"`
 
-	MoveState MoveState
+	MoveState MoveState `gorm:"index:idx_downloader_state_movestate"`
+
+	OrganizePlans      []OrganizePlan `gorm:"serializer:json"`
+	OrganizePlanAction OrganizePlanAction
 }
 
 func (s *DownloadStatus) AddToday(b int64) {
