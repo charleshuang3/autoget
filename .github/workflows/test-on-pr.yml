@@ -24,10 +24,10 @@ jobs:
         go test -v ./...
       working-directory: ./backend
 
-    - name: Run organizer tests
+    - name: Run organizer/jav-actor tests
       run: |
         go test -v ./...
-      working-directory: ./organizer
+      working-directory: ./organizer/jav-actor
 
     - name: Run frontend formatter check, linter and tests
       run: |

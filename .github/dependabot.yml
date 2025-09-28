@@ -8,7 +8,7 @@ updates:
       interval: weekly
 
   - package-ecosystem: gomod
-    directory: organizer/
+    directory: organizer/jav-actor/
     commit-message:
       prefix: "[deps]"
     schedule:
