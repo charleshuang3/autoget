@@ -42,7 +42,7 @@ jobs:
 
     - name: Run organizer/file-organizer check, linter and tests
       run: |
-        uv uv sync --locked --all-extras --dev
+        uv sync --locked --all-extras --dev
         uvx ruff check .
         uvx ruff format . --check
         uv run pytest

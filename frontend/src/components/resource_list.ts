@@ -2,7 +2,7 @@ import { html, LitElement, unsafeCSS, css, type TemplateResult, type PropertyVal
 import { customElement, property, state } from 'lit/decorators.js';
 import { DateTime } from 'luxon';
 
-import { fetchIndexerResources, type ResourcesResponse } from '../utils/api';
+import { fetchIndexerResources, type Resource, type ResourcesResponse } from '../utils/api';
 import { formatBytes, formatCreatedDate } from '../utils/format';
 import globalStyles from '/src/index.css?inline';
 
@@ -111,7 +111,7 @@ export class ResourceList extends LitElement {
     }
   }
 
-  private renderResourceCard(resource: any): TemplateResult {
+  private renderResourceCard(resource: Resource): TemplateResult {
     return html`
       <div class="image-card rounded-lg overflow-hidden shadow-lg border border-gray-700 bg-gray-100 mb-2">
         ${resource.images && resource.images.length > 0
