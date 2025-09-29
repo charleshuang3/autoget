@@ -20,3 +20,10 @@ updates:
       prefix: "[deps]"
     schedule:
       interval: weekly
+
+  - package-ecosystem: uv
+    directory: organizer/file-organizer/
+    commit-message:
+      prefix: "[deps]"
+    schedule:
+      interval: weekly

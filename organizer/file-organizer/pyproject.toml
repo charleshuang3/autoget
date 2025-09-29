@@ -7,7 +7,9 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.117.1",
     "google-adk>=1.15.1",
+    "httpx>=0.28.1",
     "litellm>=1.77.5",
+    "pytest>=8.4.2",
 ]
 
 [tool.ruff]
