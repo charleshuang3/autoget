@@ -1,31 +1,16 @@
-from typing import List, Optional
 import uuid
 
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.genai import types
-from pydantic import BaseModel
+
+from .models import PlanRequest, PlanResponse
 
 APP_NAME = "autoget_organizer"
 USER_ID = "user"
 
 session_service = InMemorySessionService()
 runner = Runner(app_name=APP_NAME, session_service=session_service)
-
-
-class PlanRequest(BaseModel):
-  files: List[str]
-  metadata: dict[str, str] = None
-
-
-class PlanAction(BaseModel):
-  file: str
-  action: str
-  target: Optional[str] = None
-
-
-class PlanResponse(BaseModel):
-  plan: List[PlanAction]
 
 
 async def run(request: PlanRequest) -> PlanResponse:

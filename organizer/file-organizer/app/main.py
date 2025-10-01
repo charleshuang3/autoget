@@ -5,6 +5,8 @@ from typing import List, Literal, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from .agents.models import Category
+
 
 # Pydantic models for /v1/plan
 class PlanRequest(BaseModel):
@@ -34,12 +36,23 @@ def check_env_vars(name: str):
     sys.exit(1)
 
 
+def check_dir(path: str):
+  if not os.path.exists(path):
+    print(f"Error: {path} does not exist.", file=sys.stderr)
+    sys.exit(1)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   # Startup
   check_env_vars("XAI_API_KEY")
   check_env_vars("XAI_MODEL")
   check_env_vars("SEARCH_MCP")
+  check_env_vars("DOWNLOAD_COMPLETED_DIR")
+  check_env_vars("TARGET_DIR")
+
+  for cat in Category:
+    check_dir(os.path.join(os.getenv("TARGET_DIR"), cat.name))
 
   yield
   # Shutdown

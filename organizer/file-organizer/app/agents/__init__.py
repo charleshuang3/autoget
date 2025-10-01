@@ -1,4 +1,6 @@
-from .organizer import OrganizerAgent
-from .runner import run as run
+import os
 
-root_agent = OrganizerAgent()
+if os.getenv("XAI_API_KEY"):
+  from .organizer import OrganizerAgent
+
+  root_agent = OrganizerAgent()

@@ -1,42 +1,13 @@
 import os
-from enum import Enum, auto
-from typing import List
 
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from pydantic import BaseModel, Field
 
 from .mcp_tools import mcp_search_tool
-
+from .models import category_list
 
 xai_model = os.getenv("XAI_MODEL")
-
-
-class Category(Enum):
-  movie = auto()
-  tv_series = auto()
-  anim_tv_series = auto()
-  anim_movie = auto()
-  photobook = auto()
-  porn = auto()
-  audio_book = auto()
-  book = auto()
-  music = auto()
-  music_video = auto()
-
-
-category_list: List[str] = [
-  Category.movie.name,
-  Category.tv_series.name,
-  Category.anim_tv_series.name,
-  Category.anim_movie.name,
-  Category.photobook.name,
-  Category.porn.name,
-  Category.audio_book.name,
-  Category.book.name,
-  Category.music.name,
-  Category.music_video.name,
-]
 
 INSTRUCTION: str = (
   """\
@@ -108,5 +79,5 @@ agent = Agent(
   output_key="category",
   disallow_transfer_to_peers=True,  # incompatible with output_schema
   disallow_transfer_to_parent=True,  # incompatible with output_schema
-  tools=[mcp_search_tool],
+  tools=[mcp_search_tool()],
 )
