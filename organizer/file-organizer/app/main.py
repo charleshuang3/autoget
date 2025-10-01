@@ -27,19 +27,19 @@ class ExecuteRequest(BaseModel):
   plan: List[PlanAction]
 
 
+def check_env_vars(name: str):
+  var = os.getenv(name)
+  if not var:
+    print(f"Error: {name} environment variable is not set or is empty.", file=sys.stderr)
+    sys.exit(1)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   # Startup
-  grok_key = os.getenv("GROK_KEY")
-  search_mcp = os.getenv("SEARCH_MCP")
-
-  if not grok_key:
-    print("Error: GROK_KEY environment variable is not set or is empty.", file=sys.stderr)
-    sys.exit(1)
-
-  if not search_mcp:
-    print("Error: SEARCH_MCP environment variable is not set or is empty.", file=sys.stderr)
-    sys.exit(1)
+  check_env_vars("XAI_API_KEY")
+  check_env_vars("XAI_MODEL")
+  check_env_vars("SEARCH_MCP")
 
   yield
   # Shutdown
