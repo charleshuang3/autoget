@@ -2,6 +2,7 @@ from typing import override, AsyncGenerator
 
 from google.adk.events import Event
 from google.adk.agents import BaseAgent, Agent, InvocationContext
+from google.adk.agents.callback_context import CallbackContext
 
 from .categorizer import agent as categorizer_agent, CategoryResponse
 from .models import PlanRequest, Category, category_list
@@ -16,6 +17,19 @@ simple_move_categories = [
 ]
 
 
+def ensure_state_files_exist(callback_context: CallbackContext):
+  # the caller should put files to state
+  if "file" not in callback_context.state:
+    # to allow run with adk web, parse files from user_content.
+    if (
+      callback_context.user_content
+      and callback_context.user_content.parts
+      and callback_context.user_content.parts[0].text
+    ):
+      req = PlanRequest.model_validate_json(callback_context.user_content.parts[0].text)
+      callback_context.state["files"] = req.files
+
+
 class OrganizerAgent(BaseAgent):
   categorizer: Agent
 
@@ -28,17 +42,11 @@ class OrganizerAgent(BaseAgent):
       description="this agent creates the organization plan",
       categorizer=categorizer_agent_,
       sub_agents=sub_agents_list,
+      before_agent_callback=ensure_state_files_exist,
     )
 
   @override
   async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-    # the caller should put files to state
-    if "file" not in ctx.session.state:
-      # to allow run with adk web, parse files from user_content.
-      if ctx.user_content and ctx.user_content.parts and ctx.user_content.parts[0].text:
-        req = PlanRequest.model_validate_json(ctx.user_content.parts[0].text)
-        ctx.session.state["files"] = req.files
-
     async for event in self.categorizer.run_async(ctx):
       yield event
 
