@@ -35,9 +35,9 @@ def check_env_vars(name: str):
     print(f"Error: {name} environment variable is not set or is empty.", file=sys.stderr)
     sys.exit(1)
 
+
 def check_any_env_vars(names: List[str]) -> bool:
-  """Check if any of the given environment variables is set.
-  """
+  """Check if any of the given environment variables is set."""
 
   for name in names:
     var = os.getenv(name)

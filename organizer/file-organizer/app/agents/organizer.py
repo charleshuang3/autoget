@@ -1,7 +1,7 @@
 from typing import override, AsyncGenerator
 
 from google.adk.events import Event
-from google.adk.agents import BaseAgent, LlmAgent, InvocationContext
+from google.adk.agents import BaseAgent, Agent, InvocationContext
 
 from .categorizer import agent as categorizer_agent, CategoryResponse
 from .models import PlanRequest, Category, category_list
@@ -17,15 +17,16 @@ simple_move_categories = [
 
 
 class OrganizerAgent(BaseAgent):
-  categorizer: LlmAgent
+  categorizer: Agent
 
   def __init__(self):
-    sub_agents_list = [categorizer_agent]
+    categorizer_agent_ = categorizer_agent()
+    sub_agents_list = [categorizer_agent_]
 
     super().__init__(
       name="organizer",
       description="this agent creates the organization plan",
-      categorizer=categorizer_agent,
+      categorizer=categorizer_agent_,
       sub_agents=sub_agents_list,
     )
 
@@ -48,5 +49,6 @@ class OrganizerAgent(BaseAgent):
     if cat.category in simple_move_categories:
       event = simple_move_plan_event(self.name, Category[cat.category], ctx.session.state["files"])
       yield event
+      return
 
     return

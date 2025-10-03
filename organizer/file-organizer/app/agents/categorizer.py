@@ -37,9 +37,7 @@ metadata from the download source. The user will provide input in this JSON form
 Your task:
 - Determine the best-fitting category for the entire set of files (treat them as a cohesive group
   from one download).
-- Only use one of these exact categories: """
-  + ", ".join(category_list)
-  + """
+- Only use one of these exact categories: $CATEGORY_LIST$
 - If the content doesn't clearly fit any category, default to the closest match based on evidence;
   do not invent new categories.
 - Also detect the primary language of the content (e.g., from titles, descriptions, or file names).
@@ -62,21 +60,23 @@ structure:
   "language": "detected_language"
 }
 """
-)
+).replace("$CATEGORY_LIST$", ", ".join(category_list))
 
 
 class CategoryResponse(BaseModel):
   category: str = Field(description="The detected category of the download.")
   language: str = Field(description="The detected language of the download.")
 
-agent = Agent(
-  name="categorizer",
-  model=LiteLlm(model=llm_model),
-  description="This agent catgorize the download",
-  instruction=INSTRUCTION,
-  output_schema=CategoryResponse,
-  output_key="category",
-  disallow_transfer_to_peers=True,  # incompatible with output_schema
-  disallow_transfer_to_parent=True,  # incompatible with output_schema
-  tools=[mcp_search_tool()],
-)
+
+def agent() -> Agent:
+  return Agent(
+    name="categorizer",
+    model=LiteLlm(model=llm_model),
+    description="This agent catgorize the download",
+    instruction=INSTRUCTION,
+    output_schema=CategoryResponse,
+    output_key="category",
+    disallow_transfer_to_peers=True,  # incompatible with output_schema
+    disallow_transfer_to_parent=True,  # incompatible with output_schema
+    tools=[mcp_search_tool()],
+  )
