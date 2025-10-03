@@ -35,6 +35,16 @@ def check_env_vars(name: str):
     print(f"Error: {name} environment variable is not set or is empty.", file=sys.stderr)
     sys.exit(1)
 
+def check_any_env_vars(names: List[str]) -> bool:
+  """Check if any of the given environment variables is set.
+  """
+
+  for name in names:
+    var = os.getenv(name)
+    if var:
+      return True
+  return False
+
 
 def check_dir(path: str):
   if not os.path.exists(path):
@@ -45,8 +55,8 @@ def check_dir(path: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   # Startup
-  check_env_vars("XAI_API_KEY")
-  check_env_vars("XAI_MODEL")
+  check_any_env_vars(["XAI_API_KEY", "LM_STUDIO_API_BASE"])
+  check_env_vars("MODEL")
   check_env_vars("SEARCH_MCP")
   check_env_vars("DOWNLOAD_COMPLETED_DIR")
   check_env_vars("TARGET_DIR")

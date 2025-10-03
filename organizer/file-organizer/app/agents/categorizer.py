@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from .mcp_tools import mcp_search_tool
 from .models import category_list
 
-xai_model = os.getenv("XAI_MODEL")
+llm_model = os.getenv("MODEL")
 
 INSTRUCTION: str = (
   """\
@@ -69,10 +69,9 @@ class CategoryResponse(BaseModel):
   category: str = Field(description="The detected category of the download.")
   language: str = Field(description="The detected language of the download.")
 
-
 agent = Agent(
   name="categorizer",
-  model=LiteLlm(model=xai_model),
+  model=LiteLlm(model=llm_model),
   description="This agent catgorize the download",
   instruction=INSTRUCTION,
   output_schema=CategoryResponse,
