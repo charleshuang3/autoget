@@ -36,19 +36,16 @@ def ensure_state_files_exist(callback_context: CallbackContext):
 class OrganizerAgent(BaseAgent):
   categorizer: Agent
   tv_series_mover: Agent
-  anim_tv_series_mover: Agent
   movie_mover: Agent
 
   def __init__(self):
     categorizer_agent_ = categorizer_agent()
-    tv_series_mover_agent_ = tv_series_mover_agent(Category.tv_series)
-    anim_series_mover_agent_ = tv_series_mover_agent(Category.anim_tv_series)
+    tv_series_mover_agent_ = tv_series_mover_agent()
     movie_mover_agent_ = movie_mover_agent()
 
     sub_agents_list = [
       categorizer_agent_,
       tv_series_mover_agent_,
-      anim_series_mover_agent_,
       movie_mover_agent_,
     ]
 
@@ -57,7 +54,6 @@ class OrganizerAgent(BaseAgent):
       description="this agent creates the organization plan",
       categorizer=categorizer_agent_,
       tv_series_mover=tv_series_mover_agent_,
-      anim_tv_series_mover=anim_series_mover_agent_,
       movie_mover=movie_mover_agent_,
       sub_agents=sub_agents_list,
       before_agent_callback=ensure_state_files_exist,
@@ -77,13 +73,8 @@ class OrganizerAgent(BaseAgent):
       yield event
       return
 
-    if cat.category == Category.tv_series.name:
+    if cat.category == Category.tv_series.name or cat.category == Category.anim_tv_series.name:
       async for event in self.tv_series_mover.run_async(ctx):
-        yield event
-      return
-
-    if cat.category == Category.anim_tv_series.name:
-      async for event in self.anim_tv_series_mover.run_async(ctx):
         yield event
       return
 
