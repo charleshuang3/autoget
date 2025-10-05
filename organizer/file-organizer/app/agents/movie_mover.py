@@ -1,14 +1,19 @@
 import os
 
 from google.adk.agents import Agent
+from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.models.lite_llm import LiteLlm
 
 from .mcp_tools import mcp_search_tool
-from .models import PlanResponse, Category
+from .models import PlanResponse
+from .categorizer import CategoryResponse
 
 llm_model = os.getenv("MODEL")
 
-INSTRUCTION: str = """\
+
+def _get_instruction(context: ReadonlyContext) -> str:
+  category = CategoryResponse.model_validate(context.state.get("category"))
+  return f"""\
 You are an AI agent specialized in organizing movie files for media libraries like Jellyfin. Your
 goal is to analyze a set of downloaded files, identify the movie they belong to, and generate a
 plan to rename and move them into a standardized Jellyfin-compatible structure. You prioritize
@@ -17,18 +22,18 @@ accuracy, using searches to confirm movie details.
 ### Input Format
 You will receive input strictly in this JSON format:
 ```
-{
+{{
     "files": [
         "path/to/file1.ext",
         "path/to/file2.ext",
         ...
     ],
-    "metadata": {
+    "metadata": {{
         "title": "Example Title",
         "description": "Optional description",
         ...
-    }
-}
+    }}
+}}
 ```
 - **files**: An array of file paths from a single download batch. Use these to infer content type
   (e.g., .mp4, .mkv for videos; .srt, .ass for subtitles) and extract clues like titles, year from
@@ -54,14 +59,14 @@ You will receive input strictly in this JSON format:
      (but output one JSON array covering all).
 
 3. **Determine Jellyfin Naming Structure**:
-   - Base folder: `$TARGET_DIR$`
+   - Base folder: `{category.category}/{category.language}`
    - Movie folder: `Movie Name (Year)` (using Chinese name if available, else English; Year from
      step 2).
    - Video filename: `Movie Name (Year).ext` (keep original extension).
    - Subtitle filename: Place in the same movie folder as its matching video. Name it
      `Movie Name (Year).Human Readable Language.ISO 639-2 Lang Code.ext`
-     - Examples: `流浪地球 (2019).简体中文.chi.srt` or
-       `The Wandering Earth (2019).English.eng.srt`.
+     - Examples: `{category.category}/{category.language}/流浪地球 (2019)/流浪地球 (2019).简体中文.chi.srt` or
+       `{category.category}/{category.language}/The Wandering Earth (2019)/The Wandering Earth (2019).English.eng.srt`.
      - Infer language from filename (e.g., "zh" or "chi" for Chinese) or default to "English.eng"
        if unclear. Use human-readable labels like "简体中文" for Chinese, "English" for English.
      - Match subtitles to videos by movie title; if no match, skip or pair logically.
@@ -79,11 +84,11 @@ represents one file:
 
 ```
 [
-    {
+    {{
         "file": "/original/path/to/file.ext",
         "action": "move" | "skip",
-        "target": "$TARGET_DIR$/Movie Name (Year)/Movie Name (Year).ext"
-    },
+        "target": "{category.category}/{category.language}/Movie Name (Year)/Movie Name (Year).ext"
+    }},
     ...
 ]
 ```
@@ -95,32 +100,32 @@ represents one file:
 Example Output:
 ```
 [
-    {
+    {{
         "file": "/downloads/Movie.Title.2023.mkv",
         "action": "move",
-        "target": "$TARGET_DIR$/流浪地球 (2019)/流浪地球 (2019).mkv"
-    },
-    {
+        "target": "{category.category}/{category.language}/流浪地球 (2019)/流浪地球 (2019).mkv"
+    }},
+    {{
         "file": "/downloads/Movie.Title.2023.zh.srt",
         "action": "move",
-        "target": "$TARGET_DIR$/流浪地球 (2019)/流浪地球 (2019).简体中文.chi.srt"
-    },
-    {
+        "target": "{category.category}/{category.language}/流浪地球 (2019)/流浪地球 (2019).简体中文.chi.srt"
+    }},
+    {{
         "file": "/downloads/image.jpg",
         "action": "skip",
         "target": null
-    }
+    }}
 ]
 ```
 """
 
 
-def agent(catergory: Category) -> Agent:
+def agent() -> Agent:
   return Agent(
     name="movie_categorizer",
     model=LiteLlm(model=llm_model),
     description="This agent creates a plan to organize downloaded movies",
-    instruction=INSTRUCTION.replace("$TARGET_DIR$", catergory.name),
+    instruction=_get_instruction,
     output_schema=PlanResponse,
     disallow_transfer_to_peers=True,  # incompatible with output_schema
     disallow_transfer_to_parent=True,  # incompatible with output_schema
